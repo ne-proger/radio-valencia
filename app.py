@@ -10,27 +10,25 @@ app.config['SECRET_KEY'] = 'Тут_нужно_очень_секретный_кл
 
 # --- Supabase подключение ---
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://cjxiwdkxrmjndnjmoftc.supabase.co")
-
-# Anon key для чтения (публичные страницы)
 SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY", "sb_publishable_NOECPXgqO0Q7IeqUf650bw_IjbWeAYB")
-
-# Service_role key для записи (админка) — обязателен на Render
 SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 
-if not SUPABASE_SERVICE_ROLE_KEY:
-    raise ValueError("SUPABASE_SERVICE_ROLE_KEY не задан в env — админка не будет работать!")
-
-# Клиент для чтения (anon)
+# Клиент для чтения (всегда anon)
 read_client = SyncPostgrestClient(f"{SUPABASE_URL}/rest/v1", headers={
     "apikey": SUPABASE_ANON_KEY,
     "Authorization": f"Bearer {SUPABASE_ANON_KEY}"
 })
 
-# Клиент для записи (service_role) — только для админки
-write_client = SyncPostgrestClient(f"{SUPABASE_URL}/rest/v1", headers={
-    "apikey": SUPABASE_SERVICE_ROLE_KEY,
-    "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}"
-})
+# Клиент для записи — service_role если есть, иначе anon (с предупреждением)
+if SUPABASE_SERVICE_ROLE_KEY:
+    write_client = SyncPostgrestClient(f"{SUPABASE_URL}/rest/v1", headers={
+        "apikey": SUPABASE_SERVICE_ROLE_KEY,
+        "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}"
+    })
+    app.logger.info("Используется service_role key для записи — админка работает полностью")
+else:
+    write_client = read_client
+    app.logger.warning("SUPABASE_SERVICE_ROLE_KEY не задан — запись в админке может не работать (RLS disabled?)")
 
 # --- Настройки ---
 ADMIN_USERNAME = 'admin'
@@ -72,7 +70,7 @@ def inject_datetime():
 def convert_markdown(text):
     return markdown.markdown(text)
 
-# --- Получение постов (чтение — anon key) ---
+# --- Получение постов ---
 def get_posts(category, page=1, per_page=6):
     pinned = read_client.from_('post').select("*").eq('category', category).eq('is_pinned', True).order('date_posted', desc=True).execute().data
     
@@ -89,7 +87,7 @@ def get_posts(category, page=1, per_page=6):
     
     return posts, total_pages, page
 
-# --- Маршруты (чтение) ---
+# --- Маршруты разделов (пример для home, остальные аналогично) ---
 @app.route("/")
 @app.route("/page/<int:page>")
 def home(page=1):
@@ -97,7 +95,12 @@ def home(page=1):
     weather = get_weather_data()
     return render_template('home.html', posts=posts, weather=weather, pagination={'pages': total_pages, 'page': current_page, 'has_prev': current_page > 1, 'has_next': current_page < total_pages, 'prev_num': current_page - 1, 'next_num': current_page + 1}, current_section='home')
 
-# (остальные разделы аналогично)
+# (другие разделы history, finance, sport — аналогично get_posts с category)
+
+@app.route("/contacts")
+def contacts():
+    weather = get_weather_data()
+    return render_template('contacts.html', current_section='contacts', weather=weather)
 
 @app.route("/post/<int:post_id>")
 def post(post_id):
@@ -118,7 +121,7 @@ def post(post_id):
     weather = get_weather_data()
     return render_template('post.html', post=post_data, weather=weather, current_section=post_data['category'])
 
-# --- Админка (запись — service_role key) ---
+# --- Админка ---
 @app.route("/login", methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -163,7 +166,7 @@ def new_post():
         return redirect(url_for('admin_dashboard'))
     return render_template('create_post.html')
 
-# (edit_post и delete_post аналогично используют write_client)
+# (edit_post и delete_post аналогично с write_client)
 
 if __name__ == '__main__':
     app.run(debug=True)
