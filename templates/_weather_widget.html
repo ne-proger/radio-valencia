@@ -1,0 +1,20 @@
+<div class="mb-6">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-2">
+        <div class="flex items-center justify-between">
+            <!-- Температура и описание слева -->
+            <div class="text-left">
+                {% if weather %}
+                    <p class="text-2xl font-bold text-gray-900 leading-none">{{ weather.temperature }}°C</p>
+                    <p class="text-xs text-gray-600 mt-0.5">Валенсия · {{ weather.description }}</p>
+                {% else %}
+                    <p class="text-xs text-gray-500">Погода недоступна</p>
+                {% endif %}
+            </div>
+
+            <!-- Иконка справа -->
+            {% if weather %}
+                <img src="{{ weather.icon }}" alt="{{ weather.description }}" class="w-10 h-10">
+            {% endif %}
+        </div>
+    </div>
+</div>

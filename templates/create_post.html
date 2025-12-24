@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Создание Новости{% endblock %}
+{% block content %}
+<div class="max-w-md sm:max-w-4xl mx-auto bg-white p-4 sm:p-8 rounded-lg shadow-xl">
+    <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-6 border-b pb-2">Создать Новую Новость</h2>
+    <form method="POST" action="{{ url_for('new_post') }}">
+        {% include '_post_form.html' %}
+        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md shadow mt-4">
+            Опубликовать
+        </button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Финансы{% endblock %}
+{% block content %}
+<div class="mb-8">
+    {% include '_weather_widget.html' %}
+</div>
+
+<h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-6 border-b-2 border-gray-200 pb-2">Финансы</h2>
+
+{% if posts %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+    {% for post in posts %}
+    
+    {% set is_pinned_and_first = post.is_pinned and loop.index == 1 and page == 1 %}
+    
+    <div class="bg-white rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:scale-[1.01] overflow-hidden
+                {% if is_pinned_and_first %}lg:col-span-2 lg:row-span-2{% endif %}"> 
+        
+        <a href="{{ url_for('post', post_id=post.id) }}" class="block">
+            
+            <div class="h-40 sm:h-48 overflow-hidden rounded-t-lg bg-gray-200 relative
+                        {% if is_pinned_and_first %}lg:h-96{% endif %}"> 
+                {% if post.main_image_url %}
+                    <img src="{{ post.main_image_url }}" alt="{{ post.title }}" 
+                         class="absolute inset-0 min-w-full min-h-full object-cover">
+                {% else %}
+                    <div class="flex items-center justify-center w-full h-full bg-gray-300">
+                        <span class="text-lg sm:text-xl text-gray-600 font-semibold">
+                            Нет иллюстрации
+                        </span>
+                    </div>
+                {% endif %}
+            </div>
+        </a>
+
+        <div class="p-3 sm:p-4">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-semibold uppercase tracking-wider 
+                             {% if post.is_pinned %}text-red-600 bg-red-100 p-1 rounded{% else %}text-gray-500{% endif %}">
+                    {% if post.is_pinned %}ЗАКРЕПЛЕНО{% else %}{% endif %}
+                </span>
+                <span class="text-xs text-gray-400">
+                    {{ post.date_posted.strftime('%d.%m.%Y') }}
+                </span>
+            </div>
+            
+            <a href="{{ url_for('post', post_id=post.id) }}" class="block">
+                <h3 class="font-bold text-gray-900 leading-snug hover:text-red-600 transition duration-300
+                           {% if is_pinned_and_first %}text-2xl sm:text-3xl{% else %}text-lg sm:text-xl{% endif %}">
+                    {{ post.title }}
+                </h3>
+            </a>
+            
+            {% if is_pinned_and_first %}
+                <p class="mt-3 text-gray-600 text-sm sm:text-base line-clamp-6">
+                    {{ post.content | markdown | striptags }}
+                </p>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+
+{% if pagination and pagination.pages > 1 %}
+<div class="mt-8 flex justify-center space-x-1 sm:space-x-2 flex-wrap">
+    
+    {% if pagination.has_prev %}
+        <a href="{{ url_for('finance', page=pagination.prev_num) }}" 
+           class="px-3 sm:px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition duration-150">
+            ← Предыдущая
+        </a>
+    {% else %}
+        <span class="px-3 sm:px-4 py-2 text-sm font-medium text-gray-400 bg-gray-100 rounded-md cursor-not-allowed">
+            ← Предыдущая
+        </span>
+    {% endif %}
+
+    {% for p in pagination.iter_pages() %}
+        {% if p %}
+            {% if p == page %}
+                <span class="px-3 sm:px-4 py-2 text-sm font-bold text-gray-900 bg-red-200 rounded-md">
+                    {{ p }}
+                </span>
+            {% else %}
+                <a href="{{ url_for('finance', page=p) }}" 
+                   class="px-3 sm:px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-100 transition duration-150">
+                    {{ p }}
+                </a>
+            {% endif %}
+        {% else %}
+            <span class="px-3 sm:px-4 py-2 text-sm font-medium text-gray-400">...</span>
+        {% endif %}
+    {% endfor %}
+
+    {% if pagination.has_next %}
+        <a href="{{ url_for('finance', page=pagination.next_num) }}" 
+           class="px-3 sm:px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition duration-150">
+            Следующая →
+        </a>
+    {% else %}
+        <span class="px-3 sm:px-4 py-2 text-sm font-medium text-gray-400 bg-gray-100 rounded-md cursor-not-allowed">
+            Следующая →
+        </span>
+    {% endif %}
+</div>
+{% endif %}
+
+
+{% else %}
+<p class="text-gray-500 text-base sm:text-lg">Пока нет статей в разделе Финансы.</p>
+{% endif %}
+
+{% endblock %}

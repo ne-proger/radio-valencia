@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Панель Администратора{% endblock %}
+{% block content %}
+
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 pb-2 border-b">
+    <h2 class="text-lg sm:text-xl font-semibold text-gray-700 mb-2 sm:mb-0">Управление новостями</h2>
+    <a href="{{ url_for('new_post') }}" 
+       class="bg-green-500 hover:bg-green-600 text-white font-medium text-sm py-1.5 px-3 rounded-md transition duration-150 whitespace-nowrap">
+        + Добавить
+    </a>
+</div>
+
+<div class="bg-white rounded-md border border-gray-200 divide-y divide-gray-200">
+    {% for post in posts %}
+    <div class="p-3 hover:bg-gray-50">
+        <!-- Заголовок -->
+        <a href="{{ url_for('post', post_id=post.id) }}" class="block text-sm font-medium text-gray-900 hover:text-red-600 transition line-clamp-2 mb-1">
+            {{ post.title }}
+        </a>
+        
+        <!-- Вторая строка: дата + закреплено -->
+        <div class="flex flex-wrap items-center gap-3 text-xs text-gray-500 mb-2">
+            <span>{{ post.date_posted.strftime('%d.%m.%Y %H:%M') }}</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+                         {% if post.is_pinned %}bg-red-50 text-red-700{% else %}bg-gray-100 text-gray-600{% endif %}">
+                Закреплено: {{ 'Да' if post.is_pinned else 'Нет' }}
+            </span>
+        </div>
+        
+        <!-- Действия: всегда в одну строку, на одном уровне -->
+        <div class="flex space-x-4 text-sm">
+            <a href="{{ url_for('edit_post', post_id=post.id) }}" 
+               class="text-indigo-600 hover:text-indigo-800 transition">
+                Редактировать
+            </a>
+            <form method="POST" action="{{ url_for('delete_post', post_id=post.id) }}" class="inline" onsubmit="return confirm('Вы уверены, что хотите удалить эту новость?');">
+                <button type="submit" class="text-red-600 hover:text-red-800 transition">
+                    Удалить
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+    
+    {% if not posts %}
+    <div class="p-4 text-center text-gray-500 text-sm">
+        Нет новостей
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

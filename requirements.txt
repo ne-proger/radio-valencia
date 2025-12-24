@@ -1,0 +1,14 @@
+flask
+flask-sqlalchemy
+werkzeug
+requests
+markdown
+
+
+postgrest-py
+gotrue
+realtime
+storage3
+
+
+gunicorn
