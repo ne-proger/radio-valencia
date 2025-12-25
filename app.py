@@ -131,15 +131,14 @@ def post(post_id):
     
     read_client.from_('post').update({'views': post_data['views'] + 1}).eq('id', post_id).execute()
     
-    # Получаем изображения с сортировкой: is_main desc, затем id asc (первая вставленная — main)
-    images_data = read_client.from_('image').select("url").eq('post_id', post_id).order('is_main', desc=True).order('id', asc=True).execute().data
+    # Получаем изображения: order by is_main desc, id asc (desc=False for asc)
+    images_data = read_client.from_('image').select("url").eq('post_id', post_id).order('is_main', desc=True).order('id', desc=False).execute().data
     post_data['images'] = [img['url'] for img in images_data]
     post_data['main_image_url'] = post_data['images'][0] if post_data['images'] else ''
     
     comments = read_client.from_('comment').select("*").eq('post_id', post_id).order('date_posted').execute().data
     post_data['comments'] = comments
     
-    # Парсим date_posted для поста и комментариев
     post_data['date_posted'] = datetime.fromisoformat(post_data['date_posted'].replace('Z', '+00:00'))
     for comment in post_data['comments']:
         comment['date_posted'] = datetime.fromisoformat(comment['date_posted'].replace('Z', '+00:00'))
