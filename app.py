@@ -13,13 +13,13 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://cjxiwdkxrmjndnjmoftc.supa
 SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY", "sb_publishable_NOECPXgqO0Q7IeqUf650bw_IjbWeAYB")
 SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 
-# Клиент для чтения
+# Клиент для чтения (anon key)
 read_client = SyncPostgrestClient(f"{SUPABASE_URL}/rest/v1", headers={
     "apikey": SUPABASE_ANON_KEY,
     "Authorization": f"Bearer {SUPABASE_ANON_KEY}"
 })
 
-# Клиент для записи
+# Клиент для записи (service_role если есть, иначе anon)
 if SUPABASE_SERVICE_ROLE_KEY:
     write_client = SyncPostgrestClient(f"{SUPABASE_URL}/rest/v1", headers={
         "apikey": SUPABASE_SERVICE_ROLE_KEY,
@@ -68,7 +68,7 @@ def inject_datetime():
 def convert_markdown(text):
     return markdown.markdown(text)
 
-# --- Получение постов ---
+# --- Получение постов с пагинацией ---
 def get_posts(category, page=1, per_page=6):
     pinned = read_client.from_('post').select("*").eq('category', category).eq('is_pinned', True).order('date_posted', desc=True).execute().data
     
@@ -80,6 +80,7 @@ def get_posts(category, page=1, per_page=6):
     
     posts = pinned + normal
     
+    # Парсим date_posted в datetime для шаблона
     for post in posts:
         post['date_posted'] = datetime.fromisoformat(post['date_posted'].replace('Z', '+00:00'))
     
@@ -88,7 +89,7 @@ def get_posts(category, page=1, per_page=6):
     
     return posts, total_pages, page
 
-# --- Маршруты разделов (пример home, остальные аналогично, но с category) ---
+# --- Маршруты разделов ---
 @app.route("/")
 @app.route("/page/<int:page>")
 def home(page=1):
@@ -122,7 +123,6 @@ def contacts():
     weather = get_weather_data()
     return render_template('contacts.html', current_section='contacts', weather=weather)
 
-# --- Страница поста (исправлено получение изображений) ---
 @app.route("/post/<int:post_id>")
 def post(post_id):
     post_data = read_client.from_('post').select("*").eq('id', post_id).single().execute().data
@@ -132,23 +132,20 @@ def post(post_id):
     
     read_client.from_('post').update({'views': post_data['views'] + 1}).eq('id', post_id).execute()
     
-    # Получаем изображения, сортируем: сначала is_main = True, затем по id
-    images_data = read_client.from_('image').select("url, is_main").eq('post_id', post_id).order('is_main', desc=True).order('id', asc=True).execute().data
-    
-    post_data['images'] = [img['url'] for img in images_data]
+    images = read_client.from_('image').select("url").eq('post_id', post_id).order('is_main', desc=True).execute().data
+    post_data['images'] = [img['url'] for img in images]
     post_data['main_image_url'] = post_data['images'][0] if post_data['images'] else ''
     
-    # Комментарии
     comments = read_client.from_('comment').select("*").eq('post_id', post_id).order('date_posted').execute().data
     post_data['comments'] = comments
     
-    # Парсим дату
+    # Парсим date_posted
     post_data['date_posted'] = datetime.fromisoformat(post_data['date_posted'].replace('Z', '+00:00'))
     
     weather = get_weather_data()
     return render_template('post.html', post=post_data, weather=weather, current_section=post_data['category'])
 
-# --- Админка (создание, редактирование, удаление) ---
+# --- Админка ---
 @app.route("/login", methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -170,6 +167,7 @@ def admin_dashboard():
     if not session.get('logged_in'):
         return redirect(url_for('login'))
     all_posts = read_client.from_('post').select("*").order('date_posted', desc=True).execute().data
+    # Парсим date_posted для админки
     for post in all_posts:
         post['date_posted'] = datetime.fromisoformat(post['date_posted'].replace('Z', '+00:00'))
     return render_template('admin.html', posts=all_posts)
@@ -189,8 +187,7 @@ def new_post():
         
         urls = [u.strip() for u in request.form.get('image_urls', '').split(',') if u.strip()]
         for i, url in enumerate(urls):
-            is_main = (i == 0)
-            write_client.from_('image').insert({'post_id': new_post['id'], 'url': url, 'is_main': is_main}).execute()
+            write_client.from_('image').insert({'post_id': new_post['id'], 'url': url, 'is_main': i == 0}).execute()
         
         flash('Новость создана', 'success')
         return redirect(url_for('admin_dashboard'))
@@ -216,8 +213,7 @@ def edit_post(post_id):
         write_client.from_('image').delete().eq('post_id', post_id).execute()
         urls = [u.strip() for u in request.form.get('image_urls', '').split(',') if u.strip()]
         for i, url in enumerate(urls):
-            is_main = (i == 0)
-            write_client.from_('image').insert({'post_id': post_id, 'url': url, 'is_main': is_main}).execute()
+            write_client.from_('image').insert({'post_id': post_id, 'url': url, 'is_main': i == 0}).execute()
         
         flash('Новость обновлена', 'success')
         return redirect(url_for('admin_dashboard'))
