@@ -13,22 +13,20 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://cjxiwdkxrmjndnjmoftc.supa
 SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY", "sb_publishable_NOECPXgqO0Q7IeqUf650bw_IjbWeAYB")
 SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 
-# Клиент для чтения (всегда anon)
-read_client = SyncPostgrestClient(f"{SUPABASE_URL}/rest/v1", headers={
-    "apikey": SUPABASE_ANON_KEY,
-    "Authorization": f"Bearer {SUPABASE_ANON_KEY}"
-})
+# Клиент для чтения (анонимный ключ)
+read_client = SyncPostgrestClient(
+    f"{SUPABASE_URL}/rest/v1",
+    headers={"apikey": SUPABASE_ANON_KEY, "Authorization": f"Bearer {SUPABASE_ANON_KEY}"}
+)
 
-# Клиент для записи — service_role если есть, иначе anon (с предупреждением)
+# Клиент для записи (service_role, если задан — иначе fallback на anon)
 if SUPABASE_SERVICE_ROLE_KEY:
-    write_client = SyncPostgrestClient(f"{SUPABASE_URL}/rest/v1", headers={
-        "apikey": SUPABASE_SERVICE_ROLE_KEY,
-        "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}"
-    })
-    app.logger.info("Используется service_role key для записи — админка работает полностью")
+    write_client = SyncPostgrestClient(
+        f"{SUPABASE_URL}/rest/v1",
+        headers={"apikey": SUPABASE_SERVICE_ROLE_KEY, "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}"}
+    )
 else:
-    write_client = read_client
-    app.logger.warning("SUPABASE_SERVICE_ROLE_KEY не задан — запись в админке может не работать (RLS disabled?)")
+    write_client = read_client  # fallback (работает, если RLS отключён)
 
 # --- Настройки ---
 ADMIN_USERNAME = 'admin'
@@ -70,10 +68,12 @@ def inject_datetime():
 def convert_markdown(text):
     return markdown.markdown(text)
 
-# --- Получение постов ---
+# --- Получение постов с пагинацией и закреплёнными ---
 def get_posts(category, page=1, per_page=6):
+    # Закреплённые
     pinned = read_client.from_('post').select("*").eq('category', category).eq('is_pinned', True).order('date_posted', desc=True).execute().data
     
+    # Обычные с пагинацией (range вместо offset)
     start = (page - 1) * per_page
     end = start + per_page - 1 - len(pinned)
     if end < start:
@@ -82,12 +82,13 @@ def get_posts(category, page=1, per_page=6):
     
     posts = pinned + normal
     
+    # Общее количество для пагинации
     total = read_client.from_('post').select("id", count='exact').eq('category', category).execute().count
     total_pages = (total + per_page - 1) // per_page if total else 1
     
     return posts, total_pages, page
 
-# --- Маршруты разделов (пример для home, остальные аналогично) ---
+# --- Маршруты разделов ---
 @app.route("/")
 @app.route("/page/<int:page>")
 def home(page=1):
@@ -95,7 +96,26 @@ def home(page=1):
     weather = get_weather_data()
     return render_template('home.html', posts=posts, weather=weather, pagination={'pages': total_pages, 'page': current_page, 'has_prev': current_page > 1, 'has_next': current_page < total_pages, 'prev_num': current_page - 1, 'next_num': current_page + 1}, current_section='home')
 
-# (другие разделы history, finance, sport — аналогично get_posts с category)
+@app.route("/history")
+@app.route("/history/page/<int:page>")
+def history(page=1):
+    posts, total_pages, current_page = get_posts('history', page)
+    weather = get_weather_data()
+    return render_template('history.html', posts=posts, weather=weather, pagination={'pages': total_pages, 'page': current_page, 'has_prev': current_page > 1, 'has_next': current_page < total_pages, 'prev_num': current_page - 1, 'next_num': current_page + 1}, current_section='history')
+
+@app.route("/finance")
+@app.route("/finance/page/<int:page>")
+def finance(page=1):
+    posts, total_pages, current_page = get_posts('finance', page)
+    weather = get_weather_data()
+    return render_template('finance.html', posts=posts, weather=weather, pagination={'pages': total_pages, 'page': current_page, 'has_prev': current_page > 1, 'has_next': current_page < total_pages, 'prev_num': current_page - 1, 'next_num': current_page + 1}, current_section='finance')
+
+@app.route("/sport")
+@app.route("/sport/page/<int:page>")
+def sport(page=1):
+    posts, total_pages, current_page = get_posts('sport', page)
+    weather = get_weather_data()
+    return render_template('sport.html', posts=posts, weather=weather, pagination={'pages': total_pages, 'page': current_page, 'has_prev': current_page > 1, 'has_next': current_page < total_pages, 'prev_num': current_page - 1, 'next_num': current_page + 1}, current_section='sport')
 
 @app.route("/contacts")
 def contacts():
@@ -109,12 +129,15 @@ def post(post_id):
         flash('Новость не найдена', 'danger')
         return redirect(url_for('home'))
     
+    # Просмотры
     read_client.from_('post').update({'views': post_data['views'] + 1}).eq('id', post_id).execute()
     
+    # Изображения
     images = read_client.from_('image').select("url").eq('post_id', post_id).order('is_main', desc=True).execute().data
     post_data['images'] = [img['url'] for img in images]
     post_data['main_image_url'] = post_data['images'][0] if post_data['images'] else ''
     
+    # Комментарии
     comments = read_client.from_('comment').select("*").eq('post_id', post_id).order('date_posted').execute().data
     post_data['comments'] = comments
     
@@ -166,7 +189,57 @@ def new_post():
         return redirect(url_for('admin_dashboard'))
     return render_template('create_post.html')
 
-# (edit_post и delete_post аналогично с write_client)
+@app.route("/admin/edit/<int:post_id>", methods=['GET', 'POST'])
+def edit_post(post_id):
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+    post_data = read_client.from_('post').select("*").eq('id', post_id).single().execute().data
+    
+    current_urls = ', '.join([img['url'] for img in read_client.from_('image').select("url").eq('post_id', post_id).execute().data])
+    
+    if request.method == 'POST':
+        data = {
+            'title': request.form['title'],
+            'content': request.form['content'],
+            'is_pinned': request.form.get('is_pinned') == 'on',
+            'category': request.form.get('category', 'news')
+        }
+        write_client.from_('post').update(data).eq('id', post_id).execute()
+        
+        write_client.from_('image').delete().eq('post_id', post_id).execute()
+        urls = [u.strip() for u in request.form.get('image_urls', '').split(',') if u.strip()]
+        for i, url in enumerate(urls):
+            write_client.from_('image').insert({'post_id': post_id, 'url': url, 'is_main': i == 0}).execute()
+        
+        flash('Новость обновлена', 'success')
+        return redirect(url_for('admin_dashboard'))
+    return render_template('edit_post.html', post=post_data, current_urls=current_urls)
+
+@app.route("/admin/delete/<int:post_id>", methods=['POST'])
+def delete_post(post_id):
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+    write_client.from_('post').delete().eq('id', post_id).execute()
+    flash('Новость удалена', 'warning')
+    return redirect(url_for('admin_dashboard'))
+
+# --- Комментарии и реакции ---
+@app.route("/post/<int:post_id>/comment", methods=['POST'])
+def add_comment(post_id):
+    username = request.form['username']
+    content = request.form['content']
+    if username and content:
+        write_client.from_('comment').insert({'post_id': post_id, 'username': username, 'content': content}).execute()
+        flash('Комментарий добавлен', 'success')
+    return redirect(url_for('post', post_id=post_id) + '#comments')
+
+@app.route("/post/<int:post_id>/react/<reaction_type>", methods=['POST'])
+def react(post_id, reaction_type):
+    post_data = read_client.from_('post').select(reaction_type).eq('id', post_id).single().execute().data
+    current = post_data[reaction_type]
+    write_client.from_('post').update({reaction_type: current + 1}).eq('id', post_id).execute()
+    flash('Реакция учтена', 'success')
+    return redirect(url_for('post', post_id=post_id))
 
 if __name__ == '__main__':
     app.run(debug=True)
