@@ -13,11 +13,13 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://cjxiwdkxrmjndnjmoftc.supa
 SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY", "sb_publishable_NOECPXgqO0Q7IeqUf650bw_IjbWeAYB")
 SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 
+# Клиент для чтения (anon key)
 read_client = SyncPostgrestClient(f"{SUPABASE_URL}/rest/v1", headers={
     "apikey": SUPABASE_ANON_KEY,
     "Authorization": f"Bearer {SUPABASE_ANON_KEY}"
 })
 
+# Клиент для записи (service_role если есть, иначе anon)
 if SUPABASE_SERVICE_ROLE_KEY:
     write_client = SyncPostgrestClient(f"{SUPABASE_URL}/rest/v1", headers={
         "apikey": SUPABASE_SERVICE_ROLE_KEY,
@@ -66,7 +68,7 @@ def inject_datetime():
 def convert_markdown(text):
     return markdown.markdown(text)
 
-# --- Получение постов с пагинацией + main_image_url для главной ---
+# --- Получение постов с пагинацией ---
 def get_posts(category, page=1, per_page=6):
     pinned = read_client.from_('post').select("*").eq('category', category).eq('is_pinned', True).order('date_posted', desc=True).execute().data
     
@@ -80,9 +82,6 @@ def get_posts(category, page=1, per_page=6):
     
     for post in posts:
         post['date_posted'] = datetime.fromisoformat(post['date_posted'].replace('Z', '+00:00'))
-        # Добавляем main_image_url для списка на главной
-        main_img = read_client.from_('image').select("url").eq('post_id', post['id']).order('is_main', desc=True).order('id', desc=False).limit(1).execute().data
-        post['main_image_url'] = main_img[0]['url'] if main_img else ''
     
     total = read_client.from_('post').select("id", count='exact').eq('category', category).execute().count
     total_pages = (total + per_page - 1) // per_page if total else 1
@@ -132,6 +131,7 @@ def post(post_id):
     
     read_client.from_('post').update({'views': post_data['views'] + 1}).eq('id', post_id).execute()
     
+    # Получаем изображения: order by is_main desc, id asc (desc=False for asc)
     images_data = read_client.from_('image').select("url").eq('post_id', post_id).order('is_main', desc=True).order('id', desc=False).execute().data
     post_data['images'] = [img['url'] for img in images_data]
     post_data['main_image_url'] = post_data['images'][0] if post_data['images'] else ''
@@ -146,8 +146,86 @@ def post(post_id):
     weather = get_weather_data()
     return render_template('post.html', post=post_data, weather=weather, current_section=post_data['category'])
 
-# --- Админка и остальное без изменений (сохранено полностью) ---
-# (весь код админки, комментариев, реакций — как в предыдущей версии)
+# --- Админка ---
+@app.route("/login", methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        if request.form['username'] == ADMIN_USERNAME and request.form['password'] == ADMIN_PASSWORD:
+            session['logged_in'] = True
+            flash('Вход выполнен', 'success')
+            return redirect(url_for('admin_dashboard'))
+        flash('Неверный логин или пароль', 'danger')
+    return render_template('login.html')
+
+@app.route("/logout")
+def logout():
+    session.pop('logged_in', None)
+    flash('Вы вышли', 'info')
+    return redirect(url_for('home'))
+
+@app.route("/admin")
+def admin_dashboard():
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+    all_posts = read_client.from_('post').select("*").order('date_posted', desc=True).execute().data
+    for post in all_posts:
+        post['date_posted'] = datetime.fromisoformat(post['date_posted'].replace('Z', '+00:00'))
+    return render_template('admin.html', posts=all_posts)
+
+@app.route("/admin/new", methods=['GET', 'POST'])
+def new_post():
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+    if request.method == 'POST':
+        data = {
+            'title': request.form['title'],
+            'content': request.form['content'],
+            'is_pinned': request.form.get('is_pinned') == 'on',
+            'category': request.form.get('category', 'news')
+        }
+        new_post = write_client.from_('post').insert(data).execute().data[0]
+        
+        urls = [u.strip() for u in request.form.get('image_urls', '').split(',') if u.strip()]
+        for i, url in enumerate(urls):
+            write_client.from_('image').insert({'post_id': new_post['id'], 'url': url, 'is_main': i == 0}).execute()
+        
+        flash('Новость создана', 'success')
+        return redirect(url_for('admin_dashboard'))
+    return render_template('create_post.html')
+
+@app.route("/admin/edit/<int:post_id>", methods=['GET', 'POST'])
+def edit_post(post_id):
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+    post_data = read_client.from_('post').select("*").eq('id', post_id).single().execute().data
+    
+    current_urls = ', '.join([img['url'] for img in read_client.from_('image').select("url").eq('post_id', post_id).execute().data])
+    
+    if request.method == 'POST':
+        data = {
+            'title': request.form['title'],
+            'content': request.form['content'],
+            'is_pinned': request.form.get('is_pinned') == 'on',
+            'category': request.form.get('category', 'news')
+        }
+        write_client.from_('post').update(data).eq('id', post_id).execute()
+        
+        write_client.from_('image').delete().eq('post_id', post_id).execute()
+        urls = [u.strip() for u in request.form.get('image_urls', '').split(',') if u.strip()]
+        for i, url in enumerate(urls):
+            write_client.from_('image').insert({'post_id': post_id, 'url': url, 'is_main': i == 0}).execute()
+        
+        flash('Новость обновлена', 'success')
+        return redirect(url_for('admin_dashboard'))
+    return render_template('edit_post.html', post=post_data, current_urls=current_urls)
+
+@app.route("/admin/delete/<int:post_id>", methods=['POST'])
+def delete_post(post_id):
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+    write_client.from_('post').delete().eq('id', post_id).execute()
+    flash('Новость удалена', 'warning')
+    return redirect(url_for('admin_dashboard'))
 
 # --- Комментарии ---
 @app.route("/post/<int:post_id>/comment", methods=['POST'])
