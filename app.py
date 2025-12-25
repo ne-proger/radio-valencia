@@ -132,15 +132,17 @@ def post(post_id):
     
     read_client.from_('post').update({'views': post_data['views'] + 1}).eq('id', post_id).execute()
     
-    images = read_client.from_('image').select("url").eq('post_id', post_id).order('is_main', desc=True).execute().data
+    images = read_client.from_('image').select("url").eq('post_id', post_id).order('is_main', desc=True).order('id').execute().data
     post_data['images'] = [img['url'] for img in images]
     post_data['main_image_url'] = post_data['images'][0] if post_data['images'] else ''
     
     comments = read_client.from_('comment').select("*").eq('post_id', post_id).order('date_posted').execute().data
     post_data['comments'] = comments
     
-    # Парсим date_posted
+    # Парсим date_posted для поста и комментариев
     post_data['date_posted'] = datetime.fromisoformat(post_data['date_posted'].replace('Z', '+00:00'))
+    for comment in post_data['comments']:
+        comment['date_posted'] = datetime.fromisoformat(comment['date_posted'].replace('Z', '+00:00'))
     
     weather = get_weather_data()
     return render_template('post.html', post=post_data, weather=weather, current_section=post_data['category'])
@@ -226,7 +228,7 @@ def delete_post(post_id):
     flash('Новость удалена', 'warning')
     return redirect(url_for('admin_dashboard'))
 
-# --- Комментарии и реакции ---
+# --- Комментарии ---
 @app.route("/post/<int:post_id>/comment", methods=['POST'])
 def add_comment(post_id):
     username = request.form['username']
@@ -236,11 +238,18 @@ def add_comment(post_id):
         flash('Комментарий добавлен', 'success')
     return redirect(url_for('post', post_id=post_id) + '#comments')
 
+# --- Реакции ---
 @app.route("/post/<int:post_id>/react/<reaction_type>", methods=['POST'])
 def react(post_id, reaction_type):
-    post_data = read_client.from_('post').select(reaction_type).eq('id', post_id).single().execute().data
-    current = post_data[reaction_type]
-    write_client.from_('post').update({reaction_type: current + 1}).eq('id', post_id).execute()
+    column_map = {'like': 'likes', 'dislike': 'dislikes'}
+    col = column_map.get(reaction_type)
+    if not col:
+        flash('Неверный тип реакции', 'danger')
+        return redirect(url_for('post', post_id=post_id))
+    
+    post_data = read_client.from_('post').select(col).eq('id', post_id).single().execute().data
+    current = post_data[col]
+    write_client.from_('post').update({col: current + 1}).eq('id', post_id).execute()
     flash('Реакция учтена', 'success')
     return redirect(url_for('post', post_id=post_id))
 
