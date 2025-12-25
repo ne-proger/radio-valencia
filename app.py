@@ -167,7 +167,6 @@ def admin_dashboard():
     if not session.get('logged_in'):
         return redirect(url_for('login'))
     all_posts = read_client.from_('post').select("*").order('date_posted', desc=True).execute().data
-    # Парсим date_posted для админки
     for post in all_posts:
         post['date_posted'] = datetime.fromisoformat(post['date_posted'].replace('Z', '+00:00'))
     return render_template('admin.html', posts=all_posts)
