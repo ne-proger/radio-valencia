@@ -13,13 +13,11 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://cjxiwdkxrmjndnjmoftc.supa
 SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY", "sb_publishable_NOECPXgqO0Q7IeqUf650bw_IjbWeAYB")
 SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 
-# Клиент для чтения (anon key)
 read_client = SyncPostgrestClient(f"{SUPABASE_URL}/rest/v1", headers={
     "apikey": SUPABASE_ANON_KEY,
     "Authorization": f"Bearer {SUPABASE_ANON_KEY}"
 })
 
-# Клиент для записи (service_role если есть, иначе anon)
 if SUPABASE_SERVICE_ROLE_KEY:
     write_client = SyncPostgrestClient(f"{SUPABASE_URL}/rest/v1", headers={
         "apikey": SUPABASE_SERVICE_ROLE_KEY,
@@ -68,7 +66,7 @@ def inject_datetime():
 def convert_markdown(text):
     return markdown.markdown(text)
 
-# --- Получение постов с пагинацией ---
+# --- Получение постов с пагинацией + main_image_url для главной ---
 def get_posts(category, page=1, per_page=6):
     pinned = read_client.from_('post').select("*").eq('category', category).eq('is_pinned', True).order('date_posted', desc=True).execute().data
     
@@ -82,6 +80,9 @@ def get_posts(category, page=1, per_page=6):
     
     for post in posts:
         post['date_posted'] = datetime.fromisoformat(post['date_posted'].replace('Z', '+00:00'))
+        # Получаем первую картинку для главной
+        main_img = read_client.from_('image').select("url").eq('post_id', post['id']).order('is_main', desc=True).order('id', desc=False).limit(1).execute().data
+        post['main_image_url'] = main_img[0]['url'] if main_img else ''
     
     total = read_client.from_('post').select("id", count='exact').eq('category', category).execute().count
     total_pages = (total + per_page - 1) // per_page if total else 1
@@ -131,10 +132,10 @@ def post(post_id):
     
     read_client.from_('post').update({'views': post_data['views'] + 1}).eq('id', post_id).execute()
     
-    # Получаем изображения: order by is_main desc, id asc (desc=False for asc)
+    # Получаем изображения как list of dict для шаблона img.url
     images_data = read_client.from_('image').select("url").eq('post_id', post_id).order('is_main', desc=True).order('id', desc=False).execute().data
-    post_data['images'] = [img['url'] for img in images_data]
-    post_data['main_image_url'] = post_data['images'][0] if post_data['images'] else ''
+    post_data['images'] = images_data  # list of {'url': '...'}
+    post_data['main_image_url'] = images_data[0]['url'] if images_data else ''
     
     comments = read_client.from_('comment').select("*").eq('post_id', post_id).order('date_posted').execute().data
     post_data['comments'] = comments
