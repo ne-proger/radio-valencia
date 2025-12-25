@@ -13,20 +13,20 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://cjxiwdkxrmjndnjmoftc.supa
 SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY", "sb_publishable_NOECPXgqO0Q7IeqUf650bw_IjbWeAYB")
 SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 
-# Клиент для чтения (анонимный ключ)
-read_client = SyncPostgrestClient(
-    f"{SUPABASE_URL}/rest/v1",
-    headers={"apikey": SUPABASE_ANON_KEY, "Authorization": f"Bearer {SUPABASE_ANON_KEY}"}
-)
+# Клиент для чтения (anon key)
+read_client = SyncPostgrestClient(f"{SUPABASE_URL}/rest/v1", headers={
+    "apikey": SUPABASE_ANON_KEY,
+    "Authorization": f"Bearer {SUPABASE_ANON_KEY}"
+})
 
-# Клиент для записи (service_role, если задан — иначе fallback на anon)
+# Клиент для записи (service_role если есть, иначе anon)
 if SUPABASE_SERVICE_ROLE_KEY:
-    write_client = SyncPostgrestClient(
-        f"{SUPABASE_URL}/rest/v1",
-        headers={"apikey": SUPABASE_SERVICE_ROLE_KEY, "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}"}
-    )
+    write_client = SyncPostgrestClient(f"{SUPABASE_URL}/rest/v1", headers={
+        "apikey": SUPABASE_SERVICE_ROLE_KEY,
+        "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}"
+    })
 else:
-    write_client = read_client  # fallback (работает, если RLS отключён)
+    write_client = read_client
 
 # --- Настройки ---
 ADMIN_USERNAME = 'admin'
@@ -68,12 +68,10 @@ def inject_datetime():
 def convert_markdown(text):
     return markdown.markdown(text)
 
-# --- Получение постов с пагинацией и закреплёнными ---
+# --- Получение постов с пагинацией ---
 def get_posts(category, page=1, per_page=6):
-    # Закреплённые
     pinned = read_client.from_('post').select("*").eq('category', category).eq('is_pinned', True).order('date_posted', desc=True).execute().data
     
-    # Обычные с пагинацией (range вместо offset)
     start = (page - 1) * per_page
     end = start + per_page - 1 - len(pinned)
     if end < start:
@@ -82,7 +80,10 @@ def get_posts(category, page=1, per_page=6):
     
     posts = pinned + normal
     
-    # Общее количество для пагинации
+    # Парсим date_posted в datetime для шаблона
+    for post in posts:
+        post['date_posted'] = datetime.fromisoformat(post['date_posted'].replace('Z', '+00:00'))
+    
     total = read_client.from_('post').select("id", count='exact').eq('category', category).execute().count
     total_pages = (total + per_page - 1) // per_page if total else 1
     
@@ -129,17 +130,17 @@ def post(post_id):
         flash('Новость не найдена', 'danger')
         return redirect(url_for('home'))
     
-    # Просмотры
     read_client.from_('post').update({'views': post_data['views'] + 1}).eq('id', post_id).execute()
     
-    # Изображения
     images = read_client.from_('image').select("url").eq('post_id', post_id).order('is_main', desc=True).execute().data
     post_data['images'] = [img['url'] for img in images]
     post_data['main_image_url'] = post_data['images'][0] if post_data['images'] else ''
     
-    # Комментарии
     comments = read_client.from_('comment').select("*").eq('post_id', post_id).order('date_posted').execute().data
     post_data['comments'] = comments
+    
+    # Парсим date_posted
+    post_data['date_posted'] = datetime.fromisoformat(post_data['date_posted'].replace('Z', '+00:00'))
     
     weather = get_weather_data()
     return render_template('post.html', post=post_data, weather=weather, current_section=post_data['category'])
@@ -166,6 +167,9 @@ def admin_dashboard():
     if not session.get('logged_in'):
         return redirect(url_for('login'))
     all_posts = read_client.from_('post').select("*").order('date_posted', desc=True).execute().data
+    # Парсим date_posted для админки
+    for post in all_posts:
+        post['date_posted'] = datetime.fromisoformat(post['date_posted'].replace('Z', '+00:00'))
     return render_template('admin.html', posts=all_posts)
 
 @app.route("/admin/new", methods=['GET', 'POST'])
