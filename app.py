@@ -80,7 +80,6 @@ def get_posts(category, page=1, per_page=6):
     
     posts = pinned + normal
     
-    # Парсим date_posted в datetime для шаблона
     for post in posts:
         post['date_posted'] = datetime.fromisoformat(post['date_posted'].replace('Z', '+00:00'))
     
@@ -132,17 +131,15 @@ def post(post_id):
     
     read_client.from_('post').update({'views': post_data['views'] + 1}).eq('id', post_id).execute()
     
-    images = read_client.from_('image').select("url").eq('post_id', post_id).order('is_main', desc=True).order('id').execute().data
+    # Получаем изображения с сортировкой: is_main desc, затем id asc
+    images = read_client.from_('image').select("url").eq('post_id', post_id).order('is_main', desc=True).order('id', asc=True).execute().data
     post_data['images'] = [img['url'] for img in images]
     post_data['main_image_url'] = post_data['images'][0] if post_data['images'] else ''
     
     comments = read_client.from_('comment').select("*").eq('post_id', post_id).order('date_posted').execute().data
     post_data['comments'] = comments
     
-    # Парсим date_posted для поста и комментариев
     post_data['date_posted'] = datetime.fromisoformat(post_data['date_posted'].replace('Z', '+00:00'))
-    for comment in post_data['comments']:
-        comment['date_posted'] = datetime.fromisoformat(comment['date_posted'].replace('Z', '+00:00'))
     
     weather = get_weather_data()
     return render_template('post.html', post=post_data, weather=weather, current_section=post_data['category'])
