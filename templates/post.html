@@ -1,24 +1,24 @@
 {% extends "base.html" %}
-{% block title %}{{ post.title }}{% endblock %}
+{% block title %}{{ post.title }} — RADIO VALENCIA{% endblock %}
 {% block content %}
 
-<article class="max-w-3xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-    <!-- Заголовок -->
-    <header class="mb-8">
-        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
+<article class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <!-- Заголовок и мета -->
+    <header class="mb-10 text-center border-b border-gray-200 pb-8">
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
             {{ post.title }}
         </h1>
-        
-        <!-- Мета-информация: дата и просмотры -->
-        <div class="mt-4 flex flex-wrap items-center justify-between text-sm text-gray-600">
-            <time datetime="{{ post.date_posted.isoformat() }}">
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-6 text-gray-600 text-lg">
+            <time datetime="{{ post.date_posted.isoformat() }}" class="flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
                 {{ post.date_posted.strftime('%d %B %Y') }}
             </time>
-            
-            <div class="flex items-center mt-2 sm:mt-0">
-                <svg class="w-4 h-4 mr-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
-                    <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path>
+            <div class="flex items-center">
+                <svg class="w-5 h-5 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                    <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
                 </svg>
                 <span>{{ post.views }} просмотров</span>
             </div>
@@ -27,143 +27,149 @@
 
     <!-- Карусель изображений -->
     {% if post.images %}
-    <div class="relative mb-10 -mx-4 sm:mx-0">
-        <div id="carousel-images" class="relative overflow-hidden rounded-xl shadow-lg h-64 sm:h-96 lg:h-[28rem]">
+    <div class="relative mb-12 -mx-4 sm:mx-0">
+        <div id="carousel-images" class="relative overflow-hidden rounded-2xl shadow-2xl h-80 sm:h-96 lg:h-[32rem]">
             {% for img in post.images %}
-            <div class="carousel-item absolute inset-0 transition-opacity duration-700 ease-in-out {{ 'opacity-100' if loop.first else 'opacity-0' }}">
+            <div class="carousel-item absolute inset-0 transition-opacity duration-1000 ease-in-out {{ 'opacity-100' if loop.first else 'opacity-0' }}">
                 <img src="{{ img.url }}" alt="{{ post.title }} — изображение {{ loop.index }}" class="w-full h-full object-cover">
             </div>
             {% endfor %}
         </div>
 
-        <!-- Кнопки навигации -->
         {% if post.images|length > 1 %}
-        <button id="prev-btn" type="button" class="absolute inset-y-0 left-0 z-10 flex items-center justify-center w-12 bg-black/20 hover:bg-black/40 text-white transition">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        <button id="prev-btn" class="absolute inset-y-0 left-4 z-10 flex items-center justify-center w-12 h-12 bg-white/80 hover:bg-white rounded-full shadow-lg transition">
+            <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"/>
+            </svg>
         </button>
-        <button id="next-btn" type="button" class="absolute inset-y-0 right-0 z-10 flex items-center justify-center w-12 bg-black/20 hover:bg-black/40 text-white transition">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        <button id="next-btn" class="absolute inset-y-0 right-4 z-10 flex items-center justify-center w-12 h-12 bg-white/80 hover:bg-white rounded-full shadow-lg transition">
+            <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/>
+            </svg>
         </button>
 
-        <!-- Точки-индикаторы -->
-        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
+        <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-3">
             {% for img in post.images %}
-            <button class="indicator w-2 h-2 rounded-full transition {{ 'bg-white' if loop.first else 'bg-white/50' }}" data-index="{{ loop.index0 }}"></button>
+            <button class="indicator w-3 h-3 rounded-full transition {{ 'bg-white shadow-md' if loop.first else 'bg-white/60' }}" data-index="{{ loop.index0 }}"></button>
             {% endfor %}
         </div>
         {% endif %}
     </div>
     {% endif %}
 
-    <!-- Скрипт карусели -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const items = document.querySelectorAll('.carousel-item');
-            const indicators = document.querySelectorAll('.indicator');
-            if (items.length === 0) return;
-
-            let currentItem = 0;
-
-            function updateCarousel() {
-                items.forEach((item, i) => {
-                    item.classList.toggle('opacity-100', i === currentItem);
-                    item.classList.toggle('opacity-0', i !== currentItem);
-                });
-                indicators.forEach((ind, i) => {
-                    ind.classList.toggle('bg-white', i === currentItem);
-                    ind.classList.toggle('bg-white/50', i !== currentItem);
-                });
-            }
-
-            document.getElementById('next-btn')?.addEventListener('click', () => {
-                currentItem = (currentItem + 1) % items.length;
-                updateCarousel();
-            });
-
-            document.getElementById('prev-btn')?.addEventListener('click', () => {
-                currentItem = (currentItem - 1 + items.length) % items.length;
-                updateCarousel();
-            });
-
-            indicators.forEach((ind, i) => {
-                ind.addEventListener('click', () => {
-                    currentItem = i;
-                    updateCarousel();
-                });
-            });
-
-            updateCarousel();
-        });
-    </script>
-
     <!-- Текст статьи -->
-    <div class="prose prose-lg max-w-none text-gray-700 mb-12 leading-loose">
+    <div class="prose prose-xl max-w-none text-gray-800 mb-16 leading-relaxed">
         {{ post.content | markdown | safe }}
     </div>
 
-    <!-- Реакции и возврат — В ОДНУ СТРОКУ, ЛЕВО/ПРАВО -->
-    <div class="flex items-center justify-between py-6 border-t border-gray-200 w-full">
-        <div class="flex items-center space-x-8">
-            <form method="POST" action="{{ url_for('react', post_id=post.id, reaction_type='like') }}" class="flex items-center">
-                <button type="submit" class="flex items-center space-x-2 text-green-600 hover:text-green-700 transition">
-                    <span class="text-3xl">👍</span>
-                    <span class="text-xl font-medium">{{ post.likes }}</span>
-                </button>
-            </form>
-            
-            <form method="POST" action="{{ url_for('react', post_id=post.id, reaction_type='dislike') }}" class="flex items-center">
-                <button type="submit" class="flex items-center space-x-2 text-red-600 hover:text-red-700 transition">
-                    <span class="text-3xl">👎</span>
-                    <span class="text-xl font-medium">{{ post.dislikes }}</span>
-                </button>
-            </form>
-        </div>
+    <!-- Реакции -->
+    <div class="flex items-center justify-center gap-12 py-10 border-t border-b border-gray-200 mb-12">
+        <form method="POST" action="{{ url_for('react', post_id=post.id, reaction_type='like') }}" class="flex flex-col items-center">
+            <button type="submit" class="text-5xl hover:scale-110 transition transform duration-200">👍</button>
+            <span class="text-2xl font-bold text-green-600 mt-2">{{ post.likes }}</span>
+        </form>
+        
+        <form method="POST" action="{{ url_for('react', post_id=post.id, reaction_type='dislike') }}" class="flex flex-col items-center">
+            <button type="submit" class="text-5xl hover:scale-110 transition transform duration-200">👎</button>
+            <span class="text-2xl font-bold text-red-600 mt-2">{{ post.dislikes }}</span>
+        </form>
+    </div>
 
-        <a href="{{ url_for('home') }}" class="text-red-600 hover:text-red-800 font-medium text-lg transition whitespace-nowrap">
-            ← На главную
+    <!-- Кнопка назад -->
+    <div class="text-center mb-12">
+        <a href="{{ url_for('home') }}" class="inline-flex items-center text-red-600 hover:text-red-800 font-semibold text-xl transition">
+            ← Вернуться на главную
         </a>
     </div>
 
     <!-- Комментарии -->
-    <section id="comments" class="mt-12 pt-8 border-t border-gray-200">
-        <h2 class="text-2xl font-bold text-gray-900 mb-6">Комментарии ({{ post.comments|length }})</h2>
+    <section id="comments" class="mt-16">
+        <h2 class="text-3xl font-bold text-gray-900 mb-8 text-center">Комментарии ({{ post.comments|length }})</h2>
 
-        <div class="space-y-6 mb-10">
+        <div class="space-y-8 mb-12">
             {% if post.comments %}
-                {% for comment in post.comments | sort(attribute='date_posted', reverse=false) %}
-                <div class="bg-gray-50 rounded-lg p-4">
-                    <div class="flex justify-between items-start mb-2">
-                        <span class="font-semibold text-gray-800">{{ comment.username }}</span>
-                        <span class="text-xs text-gray-500">{{ comment.date_posted.strftime('%d.%m.%Y в %H:%M') }}</span>
+                {% for comment in post.comments %}
+                <div class="bg-white rounded-2xl shadow-md p-6 border border-gray-100">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="font-bold text-gray-900 text-lg">{{ comment.username }}</p>
+                        </div>
+                        <p class="text-sm text-gray-500">{{ comment.date_posted.strftime('%d.%m.%Y в %H:%M') }}</p>
                     </div>
-                    <p class="text-gray-700">{{ comment.content }}</p>
+                    <p class="text-gray-700 leading-relaxed">{{ comment.content }}</p>
                 </div>
                 {% endfor %}
             {% else %}
-                <p class="text-gray-600 italic">Комментариев пока нет. Станьте первым!</p>
+                <p class="text-center text-gray-600 italic text-xl">Комментариев пока нет. Будьте первым!</p>
             {% endif %}
         </div>
 
-        <!-- Форма комментария -->
-        <div class="bg-gray-50 rounded-lg p-6">
-            <h3 class="text-xl font-semibold text-gray-900 mb-4">Добавить комментарий</h3>
+        <!-- Форма добавления комментария -->
+        <div class="bg-gradient-to-r from-red-50 to-orange-50 rounded-2xl p-8 shadow-lg">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6 text-center">Оставить комментарий</h3>
             <form method="POST" action="{{ url_for('add_comment', post_id=post.id) }}">
-                <div class="mb-4">
-                    <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Ваше имя</label>
-                    <input type="text" id="username" name="username" required 
-                           class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label for="username" class="block text-lg font-medium text-gray-700 mb-2">Ваше имя</label>
+                        <input type="text" id="username" name="username" required 
+                               class="w-full px-5 py-3 border border-gray-300 rounded-xl focus:ring-4 focus:ring-red-200 focus:border-red-500 transition">
+                    </div>
                 </div>
-                <div class="mb-6">
-                    <label for="content" class="block text-sm font-medium text-gray-700 mb-1">Комментарий</label>
-                    <textarea id="content" name="content" rows="4" required 
-                              class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"></textarea>
+                <div class="mb-8">
+                    <label for="content" class="block text-lg font-medium text-gray-700 mb-2">Комментарий</label>
+                    <textarea id="content" name="content" rows="5" required 
+                              class="w-full px-5 py-3 border border-gray-300 rounded-xl focus:ring-4 focus:ring-red-200 focus:border-red-500 transition"></textarea>
                 </div>
-                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-6 rounded-md transition">
-                    Отправить
-                </button>
+                <div class="text-center">
+                    <button type="submit" class="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-bold py-4 px-10 rounded-full text-xl shadow-lg transition transform hover:scale-105">
+                        Отправить комментарий
+                    </button>
+                </div>
             </form>
         </div>
     </section>
 </article>
+
+<!-- Скрипт карусели остаётся без изменений -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const items = document.querySelectorAll('.carousel-item');
+        const indicators = document.querySelectorAll('.indicator');
+        if (items.length === 0) return;
+
+        let currentItem = 0;
+
+        function updateCarousel() {
+            items.forEach((item, i) => {
+                item.classList.toggle('opacity-100', i === currentItem);
+                item.classList.toggle('opacity-0', i !== currentItem);
+            });
+            indicators.forEach((ind, i) => {
+                ind.classList.toggle('bg-white', i === currentItem);
+                ind.classList.toggle('bg-white/60', i !== currentItem);
+                ind.classList.toggle('shadow-md', i === currentItem);
+            });
+        }
+
+        document.getElementById('next-btn')?.addEventListener('click', () => {
+            currentItem = (currentItem + 1) % items.length;
+            updateCarousel();
+        });
+
+        document.getElementById('prev-btn')?.addEventListener('click', () => {
+            currentItem = (currentItem - 1 + items.length) % items.length;
+            updateCarousel();
+        });
+
+        indicators.forEach((ind, i) => {
+            ind.addEventListener('click', () => {
+                currentItem = i;
+                updateCarousel();
+            });
+        });
+
+        updateCarousel();
+    });
+</script>
 
 {% endblock %}
