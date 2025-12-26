@@ -3,57 +3,55 @@
 {% block content %}
 
 <article class="max-w-4xl mx-auto">
-    <!-- Hero section с изображением и заголовком -->
-    <section class="relative bg-gray-900">
+    <!-- Hero section с изображением -->
+    <section class="relative bg-black">
         {% if post.images %}
-        <div class="relative w-full max-h-screen overflow-hidden">
-            <!-- Основное изображение — полностью помещается, не обрезается -->
+        <div class="relative w-full">
+            <!-- Изображение полностью помещается -->
             <img src="{{ post.main_image_url }}" alt="{{ post.title }}" 
-                 class="w-full h-auto max-h-[80vh] object-contain object-top mx-auto">
+                 class="w-full h-auto max-h-[80vh] object-contain object-center mx-auto">
 
-            <!-- Градиентный оверлей снизу -->
-            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-
-            <!-- Контент поверх изображения -->
-            <div class="relative z-10 flex flex-col justify-end h-full pb-12 px-6 sm:px-10">
-                <!-- Мета-информация (правый верхний угол) -->
-                <div class="absolute top-4 right-4 bg-black/70 rounded-lg px-4 py-3 text-white/90 text-sm sm:text-base">
-                    <time datetime="{{ post.date_posted.isoformat() }}" class="block mb-2 flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        </svg>
-                        {{ post.date_posted.strftime('%d %B %Y') }}
-                    </time>
-                    <div class="flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
-                            <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
-                        </svg>
-                        {{ post.views }} просмотров
-                    </div>
-                </div>
-
-                <!-- Заголовок (полностью виден, адаптивный размер) -->
-                <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight drop-shadow-2xl max-w-4xl">
-                    {{ post.title }}
-                </h1>
-            </div>
+            <!-- Тёмный оверлей только снизу для заголовка -->
+            <div class="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-black/90 to-transparent"></div>
         </div>
-        {% else %}
-        <!-- Без изображения — простой заголовок -->
-        <header class="py-16 px-6 text-center bg-gradient-to-b from-gray-100 to-white">
-            <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 leading-tight mb-6">
+
+        <!-- Заголовок под изображением -->
+        <div class="px-6 py-10 bg-gradient-to-b from-transparent to-white">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 leading-tight text-center max-w-3xl mx-auto">
                 {{ post.title }}
             </h1>
-            <div class="text-lg text-gray-600">
-                {{ post.date_posted.strftime('%d %B %Y') }} • {{ post.views }} просмотров
-            </div>
-        </header>
+        </div>
+        {% else %}
+        <!-- Без изображения — заголовок сверху -->
+        <div class="px-6 py-16 text-center bg-gradient-to-b from-gray-100 to-white">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-6">
+                {{ post.title }}
+            </h1>
+        </div>
         {% endif %}
+
+        <!-- Дата и просмотры — под изображением/заголовком в одну строчку -->
+        <div class="px-6 py-6 text-center border-b border-gray-200">
+            <div class="text-gray-600 text-base sm:text-lg flex items-center justify-center gap-6 flex-wrap">
+                <time datetime="{{ post.date_posted.isoformat() }}" class="flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    {{ post.date_posted.strftime('%d %B %Y') }}
+                </time>
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                        <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
+                    </svg>
+                    {{ post.views }} просмотров
+                </div>
+            </div>
+        </div>
 
         <!-- Карусель дополнительных изображений (если >1) -->
         {% if post.images and post.images|length > 1 %}
-        <div class="relative -mt-8 mx-4 sm:mx-12 mb-12">
+        <div class="relative mx-4 my-12">
             <div id="carousel-images" class="relative overflow-hidden rounded-2xl shadow-2xl h-64 sm:h-80">
                 {% for img in post.images %}
                 <div class="carousel-item absolute inset-0 transition-opacity duration-1000 ease-in-out {{ 'opacity-100' if loop.first else 'opacity-0' }}">
