@@ -4,7 +4,7 @@
 
 <article class="max-w-4xl mx-auto">
     <!-- Заголовок над картинкой (выравнивание слева, компактный) -->
-    <header class="px-6 py-6">
+    <header class="px-6 py-4">
         <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 leading-tight text-left">
             {{ post.title }}
         </h1>
@@ -12,23 +12,23 @@
 
     <!-- Изображение полностью помещается -->
     {% if post.images %}
-    <div class="relative w-full mb-8">
+    <div class="relative w-full mb-6">
         <img src="{{ post.main_image_url }}" alt="{{ post.title }}" 
              class="w-full h-auto max-h-[80vh] object-contain object-center mx-auto rounded-lg shadow-lg">
     </div>
     {% endif %}
 
-    <!-- Дата и просмотры под картинкой в одну строчку (компактно) -->
+    <!-- Дата и просмотры под картинкой в одну строчку (всегда) -->
     <div class="px-6 py-4 text-left border-b border-gray-200">
-        <div class="text-gray-600 text-base flex items-center gap-8 flex-wrap">
-            <time datetime="{{ post.date_posted.isoformat() }}" class="flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="text-gray-600 text-base flex items-center gap-8 flex-nowrap">
+            <time datetime="{{ post.date_posted.isoformat() }}" class="flex items-center shrink-0">
+                <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                 </svg>
                 {{ post.date_posted.strftime('%d %B %Y') }}
             </time>
-            <div class="flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <div class="flex items-center shrink-0">
+                <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
                     <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
                 </svg>
@@ -44,7 +44,7 @@
             {% for img in post.images %}
             <div class="carousel-item absolute inset-0 transition-opacity duration-1000 ease-in-out {{ 'opacity-100' if loop.first else 'opacity-0' }}">
                 <img src="{{ img.url }}" alt="{{ post.title }} — изображение {{ loop.index }}" class="w-full h-full object-contain object-center">
-                </div>
+            </div>
             {% endfor %}
         </div>
 
