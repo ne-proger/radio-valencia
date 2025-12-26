@@ -3,6 +3,13 @@
 {% block content %}
 
 <article class="max-w-4xl mx-auto">
+    <!-- Заголовок над картинкой (как на образце) -->
+    <header class="px-6 py-8 text-center">
+        <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-6">
+            {{ post.title }}
+        </h1>
+    </header>
+
     <!-- Изображение полностью помещается -->
     {% if post.images %}
     <div class="relative w-full mb-8">
@@ -11,15 +18,8 @@
     </div>
     {% endif %}
 
-    <!-- Заголовок под изображением (не большой шрифт) -->
-    <header class="px-6 mb-8 text-center">
-        <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
-            {{ post.title }}
-        </h1>
-    </header>
-
-    <!-- Дата и просмотры под заголовком в одну строчку -->
-    <div class="px-6 mb-12 text-center">
+    <!-- Дата и просмотры под картинкой в одну строчку -->
+    <div class="px-6 py-6 text-center border-b border-gray-200">
         <div class="text-gray-600 text-base flex items-center justify-center gap-8 flex-wrap">
             <time datetime="{{ post.date_posted.isoformat() }}" class="flex items-center">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
