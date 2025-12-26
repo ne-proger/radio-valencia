@@ -1,8 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Редактирование: {{ post.title }}{% endblock %}
 {% block content %}
-{% block form_title %}Редактировать новость{% endblock %}
-{% block submit_text %}Сохранить изменения{% endblock %}
+
 <div class="max-w-md sm:max-w-4xl mx-auto bg-white p-4 sm:p-8 rounded-lg shadow-xl">
     <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-6 border-b pb-2">Редактировать Новую Новость</h2>
     <form method="POST" action="{{ url_for('edit_post', post_id=post.id) }}">
