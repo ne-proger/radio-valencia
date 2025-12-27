@@ -66,37 +66,30 @@ def inject_datetime():
 def convert_markdown(text):
     return markdown.markdown(text)
 
-# --- Получение постов с пагинацией + main_image_url + total из header ---
+# --- Получение постов с пагинацией + main_image_url для главной ---
 def get_posts(category, page=1, per_page=6):
-    # Pinned
     pinned = read_client.from_('post').select("*").eq('category', category).eq('is_pinned', True).order('date_posted', desc=True).execute().data
-
-    # Total count with Prefer: count=exact
-    count_response = read_client.from_('post').select("id").eq('category', category).execute(headers={"Prefer": "count=exact"})
-    content_range = count_response.headers.get('Content-Range', '*/0')
-    total = int(content_range.split('/')[-1]) if '/' in content_range else 0
-
-    # Normal posts with range
-    start = (page - 1) * per_page - len(pinned)
-    end = start + per_page - 1
-    start = max(start, 0)
-    normal = []
-    if start <= total and end >= start:
-        normal = read_client.from_('post').select("*").eq('category', category).eq('is_pinned', False).order('date_posted', desc=True).range(start, end).execute().data
-
+    
+    start = (page - 1) * per_page
+    end = start + per_page - 1 - len(pinned)
+    if end < start:
+        end = start - 1
+    normal = read_client.from_('post').select("*").eq('category', category).eq('is_pinned', False).order('date_posted', desc=True).range(start, end).execute().data if end >= start else []
+    
     posts = pinned + normal
-
+    
     for post in posts:
         post['date_posted'] = datetime.fromisoformat(post['date_posted'].replace('Z', '+00:00'))
-        # Main image for list
+        # Получаем первую картинку для главной
         main_img = read_client.from_('image').select("url").eq('post_id', post['id']).order('is_main', desc=True).order('id', desc=False).limit(1).execute().data
         post['main_image_url'] = main_img[0]['url'] if main_img else ''
-
+    
+    total = read_client.from_('post').select("id", count='exact').eq('category', category).execute().count
     total_pages = (total + per_page - 1) // per_page if total else 1
-
+    
     return posts, total_pages, page
 
-# --- Маршруты разделов (остальное без изменений) ---
+# --- Маршруты разделов ---
 @app.route("/")
 @app.route("/page/<int:page>")
 def home(page=1):
@@ -104,9 +97,161 @@ def home(page=1):
     weather = get_weather_data()
     return render_template('home.html', posts=posts, weather=weather, pagination={'pages': total_pages, 'page': current_page, 'has_prev': current_page > 1, 'has_next': current_page < total_pages, 'prev_num': current_page - 1, 'next_num': current_page + 1}, current_section='home')
 
-# (аналогично для history, finance, sport)
+@app.route("/history")
+@app.route("/history/page/<int:page>")
+def history(page=1):
+    posts, total_pages, current_page = get_posts('history', page)
+    weather = get_weather_data()
+    return render_template('history.html', posts=posts, weather=weather, pagination={'pages': total_pages, 'page': current_page, 'has_prev': current_page > 1, 'has_next': current_page < total_pages, 'prev_num': current_page - 1, 'next_num': current_page + 1}, current_section='history')
 
-# (остальной код app.py без изменений — админка, post, комментарии, реакции)
+@app.route("/finance")
+@app.route("/finance/page/<int:page>")
+def finance(page=1):
+    posts, total_pages, current_page = get_posts('finance', page)
+    weather = get_weather_data()
+    return render_template('finance.html', posts=posts, weather=weather, pagination={'pages': total_pages, 'page': current_page, 'has_prev': current_page > 1, 'has_next': current_page < total_pages, 'prev_num': current_page - 1, 'next_num': current_page + 1}, current_section='finance')
+
+@app.route("/sport")
+@app.route("/sport/page/<int:page>")
+def sport(page=1):
+    posts, total_pages, current_page = get_posts('sport', page)
+    weather = get_weather_data()
+    return render_template('sport.html', posts=posts, weather=weather, pagination={'pages': total_pages, 'page': current_page, 'has_prev': current_page > 1, 'has_next': current_page < total_pages, 'prev_num': current_page - 1, 'next_num': current_page + 1}, current_section='sport')
+
+@app.route("/contacts")
+def contacts():
+    weather = get_weather_data()
+    return render_template('contacts.html', current_section='contacts', weather=weather)
+
+@app.route("/post/<int:post_id>")
+def post(post_id):
+    post_data = read_client.from_('post').select("*").eq('id', post_id).single().execute().data
+    if not post_data:
+        flash('Новость не найдена', 'danger')
+        return redirect(url_for('home'))
+    
+    read_client.from_('post').update({'views': post_data['views'] + 1}).eq('id', post_id).execute()
+    
+    # Получаем изображения как list of dict для шаблона img.url
+    images_data = read_client.from_('image').select("url").eq('post_id', post_id).order('is_main', desc=True).order('id', desc=False).execute().data
+    post_data['images'] = images_data  # list of {'url': '...'}
+    post_data['main_image_url'] = images_data[0]['url'] if images_data else ''
+    
+    comments = read_client.from_('comment').select("*").eq('post_id', post_id).order('date_posted').execute().data
+    post_data['comments'] = comments
+    
+    post_data['date_posted'] = datetime.fromisoformat(post_data['date_posted'].replace('Z', '+00:00'))
+    for comment in post_data['comments']:
+        comment['date_posted'] = datetime.fromisoformat(comment['date_posted'].replace('Z', '+00:00'))
+    
+    weather = get_weather_data()
+    return render_template('post.html', post=post_data, weather=weather, current_section=post_data['category'])
+
+# --- Админка ---
+@app.route("/login", methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        if request.form['username'] == ADMIN_USERNAME and request.form['password'] == ADMIN_PASSWORD:
+            session['logged_in'] = True
+            flash('Вход выполнен', 'success')
+            return redirect(url_for('admin_dashboard'))
+        flash('Неверный логин или пароль', 'danger')
+    return render_template('login.html')
+
+@app.route("/logout")
+def logout():
+    session.pop('logged_in', None)
+    flash('Вы вышли', 'info')
+    return redirect(url_for('home'))
+
+@app.route("/admin")
+def admin_dashboard():
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+    all_posts = read_client.from_('post').select("*").order('date_posted', desc=True).execute().data
+    for post in all_posts:
+        post['date_posted'] = datetime.fromisoformat(post['date_posted'].replace('Z', '+00:00'))
+    return render_template('admin.html', posts=all_posts)
+
+@app.route("/admin/new", methods=['GET', 'POST'])
+def new_post():
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+    if request.method == 'POST':
+        data = {
+            'title': request.form['title'],
+            'content': request.form['content'],
+            'is_pinned': request.form.get('is_pinned') == 'on',
+            'category': request.form.get('category', 'news')
+        }
+        new_post = write_client.from_('post').insert(data).execute().data[0]
+        
+        urls = [u.strip() for u in request.form.get('image_urls', '').split(',') if u.strip()]
+        for i, url in enumerate(urls):
+            write_client.from_('image').insert({'post_id': new_post['id'], 'url': url, 'is_main': i == 0}).execute()
+        
+        flash('Новость создана', 'success')
+        return redirect(url_for('admin_dashboard'))
+    return render_template('create_post.html')
+
+@app.route("/admin/edit/<int:post_id>", methods=['GET', 'POST'])
+def edit_post(post_id):
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+    post_data = read_client.from_('post').select("*").eq('id', post_id).single().execute().data
+    
+    current_urls = ', '.join([img['url'] for img in read_client.from_('image').select("url").eq('post_id', post_id).execute().data])
+    
+    if request.method == 'POST':
+        data = {
+            'title': request.form['title'],
+            'content': request.form['content'],
+            'is_pinned': request.form.get('is_pinned') == 'on',
+            'category': request.form.get('category', 'news')
+        }
+        write_client.from_('post').update(data).eq('id', post_id).execute()
+        
+        write_client.from_('image').delete().eq('post_id', post_id).execute()
+        urls = [u.strip() for u in request.form.get('image_urls', '').split(',') if u.strip()]
+        for i, url in enumerate(urls):
+            write_client.from_('image').insert({'post_id': post_id, 'url': url, 'is_main': i == 0}).execute()
+        
+        flash('Новость обновлена', 'success')
+        return redirect(url_for('admin_dashboard'))
+    return render_template('edit_post.html', post=post_data, current_urls=current_urls)
+
+@app.route("/admin/delete/<int:post_id>", methods=['POST'])
+def delete_post(post_id):
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+    write_client.from_('post').delete().eq('id', post_id).execute()
+    flash('Новость удалена', 'warning')
+    return redirect(url_for('admin_dashboard'))
+
+# --- Комментарии ---
+@app.route("/post/<int:post_id>/comment", methods=['POST'])
+def add_comment(post_id):
+    username = request.form['username']
+    content = request.form['content']
+    if username and content:
+        write_client.from_('comment').insert({'post_id': post_id, 'username': username, 'content': content}).execute()
+        flash('Комментарий добавлен', 'success')
+    return redirect(url_for('post', post_id=post_id) + '#comments')
+
+# --- Реакции ---
+@app.route("/post/<int:post_id>/react/<reaction_type>", methods=['POST'])
+def react(post_id, reaction_type):
+    column_map = {'like': 'likes', 'dislike': 'dislikes'}
+    col = column_map.get(reaction_type)
+    if not col:
+        flash('Неверный тип реакции', 'danger')
+        return redirect(url_for('post', post_id=post_id))
+    
+    post_data = read_client.from_('post').select(col).eq('id', post_id).single().execute().data
+    current = post_data[col]
+    write_client.from_('post').update({col: current + 1}).eq('id', post_id).execute()
+    flash('Реакция учтена', 'success')
+    return redirect(url_for('post', post_id=post_id))
 
 if __name__ == '__main__':
     app.run(debug=True)
