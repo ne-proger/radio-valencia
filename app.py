@@ -66,25 +66,34 @@ def inject_datetime():
 def convert_markdown(text):
     return markdown.markdown(text)
 
-# --- Получение постов с пагинацией + main_image_url + pinned всегда сверху ---
+# --- Получение постов с пагинацией (pinned всегда сверху, пагинация только normal) ---
 def get_posts(category, page=1, per_page=6):
-    pinned = read_client.from_('post').select("*").eq('category', category).eq('is_pinned', True).order('date_posted', desc=True).execute().data
-    
-    normal_count = read_client.from_('post').select("id", count='exact').eq('category', category).eq('is_pinned', False).execute().count
-    total_pages = (normal_count + per_page - 1) // per_page if normal_count else 1
-    
-    start = (page - 1) * per_page
-    end = start + per_page - 1
-    normal = read_client.from_('post').select("*").eq('category', category).eq('is_pinned', False).order('date_posted', desc=True).range(start, end).execute().data
-    
-    posts = pinned + normal
-    
-    for post in posts:
-        post['date_posted'] = datetime.fromisoformat(post['date_posted'].replace('Z', '+00:00'))
-        main_img = read_client.from_('image').select("url").eq('post_id', post['id']).order('is_main', desc=True).order('id', desc=False).limit(1).execute().data
-        post['main_image_url'] = main_img[0]['url'] if main_img else ''
-    
-    return posts, total_pages, page
+    try:
+        # Pinned посты — всегда показываем все
+        pinned = read_client.from_('post').select("*").eq('category', category).eq('is_pinned', True).order('date_posted', desc=True).execute().data
+
+        # Количество normal постов для пагинации
+        normal_count_resp = read_client.from_('post').select("id", count='exact').eq('category', category).eq('is_pinned', False).execute()
+        normal_count = normal_count_resp.count
+
+        total_pages = max(1, (normal_count + per_page - 1) // per_page)
+
+        # Normal посты — пагинируем
+        offset = (page - 1) * per_page
+        normal = read_client.from_('post').select("*").eq('category', category).eq('is_pinned', False).order('date_posted', desc=True).range(offset, offset + per_page - 1).execute().data
+
+        posts = pinned + normal
+
+        # Добавляем main_image_url и парсим дату
+        for post in posts:
+            post['date_posted'] = datetime.fromisoformat(post['date_posted'].replace('Z', '+00:00'))
+            main_img = read_client.from_('image').select("url").eq('post_id', post['id']).order('is_main', desc=True).order('id', desc=False).limit(1).execute().data
+            post['main_image_url'] = main_img[0]['url'] if main_img else ''
+
+        return posts, total_pages, page
+    except Exception as e:
+        flash(f'Ошибка загрузки новостей: {str(e)}', 'danger')
+        return [], 1, page
 
 # --- Маршруты разделов ---
 @app.route("/")
