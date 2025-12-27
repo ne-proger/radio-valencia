@@ -62,7 +62,7 @@
     {% endfor %}
 </div>
 
-{% if pagination.pages > 1 or pagination.has_prev or pagination.has_next %}
+{% if pagination.pages > 1 %}
 <div class="mt-8 flex justify-center space-x-1 sm:space-x-2 flex-wrap">
     
     {% if pagination.has_prev %}
