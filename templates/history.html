@@ -65,44 +65,27 @@
 {% if pagination and pagination.pages > 1 %}
 <div class="mt-8 flex justify-center space-x-1 sm:space-x-2 flex-wrap">
     
-    {% if pagination.has_prev %}
-        <a href="{{ url_for('history', page=pagination.prev_num) }}" 
-           class="px-3 sm:px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition duration-150">
+{% if pagination.pages > 1 %}
+<div class="mt-12 flex justify-center">
+    <nav class="inline-flex rounded-md shadow">
+        {% if pagination.has_prev %}
+        <a href="{{ url_for(request.endpoint, page=pagination.prev_num) }}" class="px-4 py-2 border border-gray-300 rounded-l-md bg-white text-gray-700 hover:bg-gray-50">
             ← Предыдущая
         </a>
-    {% else %}
-        <span class="px-3 sm:px-4 py-2 text-sm font-medium text-gray-400 bg-gray-100 rounded-md cursor-not-allowed">
-            ← Предыдущая
-        </span>
-    {% endif %}
-
-    {% for p in pagination.iter_pages() %}
-        {% if p %}
-            {% if p == page %}
-                <span class="px-3 sm:px-4 py-2 text-sm font-bold text-gray-900 bg-red-200 rounded-md">
-                    {{ p }}
-                </span>
-            {% else %}
-                <a href="{{ url_for('history', page=p) }}" 
-                   class="px-3 sm:px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-100 transition duration-150">
-                    {{ p }}
-                </a>
-            {% endif %}
-        {% else %}
-            <span class="px-3 sm:px-4 py-2 text-sm font-medium text-gray-400">...</span>
         {% endif %}
-    {% endfor %}
 
-    {% if pagination.has_next %}
-        <a href="{{ url_for('history', page=pagination.next_num) }}" 
-           class="px-3 sm:px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition duration-150">
+        {% for p in range(1, pagination.pages + 1) %}
+        <a href="{{ url_for(request.endpoint, page=p) }}" class="px-4 py-2 border-t border-b border-gray-300 bg-white {% if p == pagination.page %}bg-red-600 text-white{% else %}text-gray-700 hover:bg-gray-50{% endif %}">
+            {{ p }}
+        </a>
+        {% endfor %}
+
+        {% if pagination.has_next %}
+        <a href="{{ url_for(request.endpoint, page=pagination.next_num) }}" class="px-4 py-2 border border-gray-300 rounded-r-md bg-white text-gray-700 hover:bg-gray-50">
             Следующая →
         </a>
-    {% else %}
-        <span class="px-3 sm:px-4 py-2 text-sm font-medium text-gray-400 bg-gray-100 rounded-md cursor-not-allowed">
-            Следующая →
-        </span>
-    {% endif %}
+        {% endif %}
+    </nav>
 </div>
 {% endif %}
 

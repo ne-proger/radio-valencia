@@ -66,28 +66,36 @@ def inject_datetime():
 def convert_markdown(text):
     return markdown.markdown(text)
 
-# --- Получение постов с пагинацией + main_image_url для главной ---
+# --- Получение постов с пагинацией ---
 def get_posts(category, page=1, per_page=6):
-    pinned = read_client.from_('post').select("*").eq('category', category).eq('is_pinned', True).order('date_posted', desc=True).execute().data
-    
-    start = (page - 1) * per_page
-    end = start + per_page - 1 - len(pinned)
-    if end < start:
-        end = start - 1
-    normal = read_client.from_('post').select("*").eq('category', category).eq('is_pinned', False).order('date_posted', desc=True).range(start, end).execute().data if end >= start else []
-    
-    posts = pinned + normal
-    
-    for post in posts:
-        post['date_posted'] = datetime.fromisoformat(post['date_posted'].replace('Z', '+00:00'))
-        # Получаем первую картинку для главной
-        main_img = read_client.from_('image').select("url").eq('post_id', post['id']).order('is_main', desc=True).order('id', desc=False).limit(1).execute().data
-        post['main_image_url'] = main_img[0]['url'] if main_img else ''
-    
-    total = read_client.from_('post').select("id", count='exact').eq('category', category).execute().count
-    total_pages = (total + per_page - 1) // per_page if total else 1
-    
-    return posts, total_pages, page
+    try:
+        # Pinned посты
+        pinned = read_client.from_('post').select("*").eq('category', category).eq('is_pinned', True).order('date_posted', desc=True).execute().data
+
+        # Общее количество постов
+        all_resp = read_client.from_('post').select("id").eq('category', category).execute()
+        total = len(all_resp.data)
+
+        # Обычные посты
+        offset = (page - 1) * per_page
+        normal_resp = read_client.from_('post').select("*").eq('category', category).eq('is_pinned', False).order('date_posted', desc=True).range(offset, offset + per_page - 1).execute()
+        normal = normal_resp.data
+
+        posts = pinned + normal
+
+        # main_image_url и дата
+        for post in posts:
+            post['date_posted'] = datetime.fromisoformat(post['date_posted'].replace('Z', '+00:00'))
+            main_img_resp = read_client.from_('image').select("url").eq('post_id', post['id']).order('is_main', desc=True).order('id', desc=False).limit(1).execute()
+            main_img = main_img_resp.data
+            post['main_image_url'] = main_img[0]['url'] if main_img else ''
+
+        total_pages = max(1, (total + per_page - 1) // per_page)
+
+        return posts, total_pages, page
+    except Exception as e:
+        flash(f'Ошибка загрузки новостей: {str(e)}', 'danger')
+        return [], 1, page
 
 # --- Маршруты разделов ---
 @app.route("/")
@@ -132,9 +140,8 @@ def post(post_id):
     
     read_client.from_('post').update({'views': post_data['views'] + 1}).eq('id', post_id).execute()
     
-    # Получаем изображения как list of dict для шаблона img.url
     images_data = read_client.from_('image').select("url").eq('post_id', post_id).order('is_main', desc=True).order('id', desc=False).execute().data
-    post_data['images'] = images_data  # list of {'url': '...'}
+    post_data['images'] = images_data
     post_data['main_image_url'] = images_data[0]['url'] if images_data else ''
     
     comments = read_client.from_('comment').select("*").eq('post_id', post_id).order('date_posted').execute().data
