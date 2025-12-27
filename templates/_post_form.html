@@ -1,40 +1,59 @@
-<div class="mb-4">
-    <label for="title" class="block text-sm font-medium text-gray-700">Заголовок</label>
-    <input type="text" id="title" name="title" required
-           value="{{ post.title if post else '' }}"
-           class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-red-500 focus:border-red-500">
+<div class="mb-6">
+    <label for="title" class="block text-lg font-medium text-gray-700 mb-2">Заголовок</label>
+    <input type="text" name="title" id="title" value="{{ post.title if post else '' }}" required 
+           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
 </div>
 
-<div class="mb-4">
-    <label for="category" class="block text-sm font-medium text-gray-700">Раздел</label>
-    <select id="category" name="category" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-red-500 focus:border-red-500">
-        <option value="news" {% if post and post.category == 'news' %}selected{% endif %}>Новости</option>
-        <option value="history" {% if post and post.category == 'history' %}selected{% endif %}>История</option>
-        <option value="finance" {% if post and post.category == 'finance' %}selected{% endif %}>Финансы</option>
-        <option value="sport" {% if post and post.category == 'sport' %}selected{% endif %}>Спорт</option>
-    </select>
+<div class="mb-6">
+    <label for="content" class="block text-lg font-medium text-gray-700 mb-2">Содержание (Markdown)</label>
+    <textarea name="content" id="content" rows="20" required 
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg">{{ post.content if post else '' }}</textarea>
 </div>
 
-<div class="mb-4">
-    <label for="image_urls" class="block text-sm font-medium text-gray-700">
-        URL Иллюстраций (До 10 шт., через запятую. Первое будет главным)
+<div class="mb-6">
+    <label for="image_urls" class="block text-lg font-medium text-gray-700 mb-2">Ссылки на изображения (через запятую)</label>
+    <input type="text" name="image_urls" id="image_urls" value="{{ current_urls if current_urls else '' }}" 
+           placeholder="https://example.com/img1.jpg, https://example.com/img2.jpg"
+           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
+    <p class="text-sm text-gray-500 mt-2">Первая ссылка — главная картинка</p>
+</div>
+
+<div class="mb-6 flex flex-wrap items-center gap-8">
+    <label class="flex items-center">
+        <input type="checkbox" name="is_pinned" {% if post and post.is_pinned %}checked{% endif %} class="mr-2">
+        <span class="text-lg">Закрепить новость</span>
     </label>
-    <textarea id="image_urls" name="image_urls" rows="2 sm:rows-3"
-           placeholder="https://example.com/main.jpg, https://example.com/extra1.jpg, https://example.com/extra2.jpg"
-           class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-red-500 focus:border-red-500">{{ current_urls | default('') }}</textarea>
+
+    <div>
+        <label for="category" class="block text-lg font-medium text-gray-700 mb-2">Категория</label>
+        <select name="category" id="category" class="px-4 py-3 border border-gray-300 rounded-lg">
+            <option value="news" {% if not post or post.category == 'news' %}selected{% endif %}>Новости</option>
+            <option value="history" {% if post and post.category == 'history' %}selected{% endif %}>История</option>
+            <option value="finance" {% if post and post.category == 'finance' %}selected{% endif %}>Финансы</option>
+            <option value="sport" {% if post and post.category == 'sport' %}selected{% endif %}>Спорт</option>
+        </select>
+    </div>
 </div>
 
-<div class="mb-4">
-    <label for="content" class="block text-sm font-medium text-gray-700">Текст Новости</label>
-    <textarea id="content" name="content" rows="6 sm:rows-10" required
-              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-red-500 focus:border-red-500">{{ (post.content if post else '') | trim }}</textarea>
-</div>
+<!-- EasyMDE CDN + инициализация с forceSync -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.css">
+<script src="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.js"></script>
 
-<div class="flex items-center mb-4">
-    <input type="checkbox" id="is_pinned" name="is_pinned"
-           {% if post and post.is_pinned %}checked{% endif %}
-           class="h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
-    <label for="is_pinned" class="ml-2 block text-sm font-medium text-gray-900">
-        Закрепить на главной странице (будет отображаться в любом случае)
-    </label>
-</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const textarea = document.getElementById('content');
+        if (textarea) {
+            const easymde = new EasyMDE({
+                element: textarea,
+                spellChecker: false,
+                forceSync: true,  // Ключевая опция — значение всегда в textarea
+                autosave: {
+                    enabled: true,
+                    uniqueId: "admin-post-content-" + Date.now(),
+                    delay: 2000
+                },
+                toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen", "|", "guide"]
+            });
+        }
+    });
+</script>
