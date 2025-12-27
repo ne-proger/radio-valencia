@@ -66,13 +66,13 @@ def inject_datetime():
 def convert_markdown(text):
     return markdown.markdown(text)
 
-# --- Получение постов с пагинацией (pinned всегда сверху, пагинация только normal) ---
+# --- Получение постов с пагинацией (pinned всегда сверху на всех страницах, пагинация только normal) ---
 def get_posts(category, page=1, per_page=6):
     try:
         # Pinned посты — всегда показываем все
         pinned = read_client.from_('post').select("*").eq('category', category).eq('is_pinned', True).order('date_posted', desc=True).execute().data
 
-        # Количество normal постов для пагинации
+        # Количество normal постов
         normal_count_resp = read_client.from_('post').select("id", count='exact').eq('category', category).eq('is_pinned', False).execute()
         normal_count = normal_count_resp.count
 
@@ -84,7 +84,7 @@ def get_posts(category, page=1, per_page=6):
 
         posts = pinned + normal
 
-        # Добавляем main_image_url и парсим дату
+        # main_image_url и дата
         for post in posts:
             post['date_posted'] = datetime.fromisoformat(post['date_posted'].replace('Z', '+00:00'))
             main_img = read_client.from_('image').select("url").eq('post_id', post['id']).order('is_main', desc=True).order('id', desc=False).limit(1).execute().data
