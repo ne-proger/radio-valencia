@@ -1,5 +1,18 @@
 {% extends "base.html" %}
+
 {% block title %}{{ post.title }} — RADIO VALENCIA{% endblock %}
+
+{% block description %}
+{% set clean_content = post.content | markdown | striptags | truncate(155) %}
+{{ clean_content }}...
+{% endblock %}
+
+{% block og_title %}{{ post.title }} — RADIO VALENCIA{% endblock %}
+{% block og_description %}
+{% set clean_content = post.content | markdown | striptags | truncate(195) %}
+{{ clean_content }}...
+{% endblock %}
+
 {% block content %}
 
 <article class="max-w-4xl mx-auto">
