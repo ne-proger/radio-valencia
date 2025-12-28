@@ -1,9 +1,10 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory, make_response
 from postgrest import SyncPostgrestClient
 import os
 import requests
 from datetime import datetime
 import markdown
+from xml.etree.ElementTree import Element, SubElement, tostring  # Для генерации sitemap.xml
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'Тут_нужно_очень_секретный_ключ_для_сессий'
@@ -66,17 +67,69 @@ def inject_datetime():
 def convert_markdown(text):
     return markdown.markdown(text)
 
-# Маршрут для Google верификации
+# Маршруты верификации
 @app.route('/google57845417bd9a6989.html')
 def google_verification():
     return send_from_directory(app.root_path, 'google57845417bd9a6989.html')
 
-# Маршрут для Yandex верификации
 @app.route('/yandex_153d53007f9c0949.html')
 def yandex_verification():
     return send_from_directory(app.root_path, 'yandex_153d53007f9c0949.html')
 
-# --- Получение постов с пагинацией (pinned только на page=1, adjust range) ---
+# --- robots.txt ---
+@app.route('/robots.txt')
+def robots():
+    content = """User-agent: *
+Allow: /
+Disallow: /login
+Disallow: /admin
+Disallow: /admin/*
+Sitemap: https://radio-valencia.onrender.com/sitemap.xml"""
+    response = make_response(content)
+    response.headers["Content-Type"] = "text/plain"
+    return response
+
+# --- Динамический sitemap.xml ---
+@app.route('/sitemap.xml')
+def sitemap():
+    base_url = 'https://radio-valencia.onrender.com'
+    
+    # Статические страницы
+    static_urls = [
+        f'{base_url}/',
+        f'{base_url}/history',
+        f'{base_url}/finance',
+        f'{base_url}/sport',
+        f'{base_url}/contacts'
+    ]
+    
+    # Все посты из Supabase
+    try:
+        posts = read_client.from_('post').select('id').execute().data
+        post_urls = [f'{base_url}/post/{post["id"]}' for post in posts]
+    except:
+        post_urls = []
+    
+    all_urls = static_urls + post_urls
+    
+    # Генерация XML
+    urlset = Element('urlset', xmlns="http://www.sitemaps.org/schemas/sitemap/0.9")
+    
+    for url in all_urls:
+        url_elem = SubElement(urlset, 'url')
+        loc = SubElement(url_elem, 'loc')
+        loc.text = url
+        lastmod = SubElement(url_elem, 'lastmod')
+        lastmod.text = datetime.now().strftime('%Y-%m-%d')
+        priority = SubElement(url_elem, 'priority')
+        priority.text = '1.0' if url == f'{base_url}/' else '0.8' if url in static_urls else '0.6'
+    
+    xml_data = b'<?xml version="1.0" encoding="UTF-8"?>\n' + tostring(urlset, encoding='utf-8')
+    response = make_response(xml_data)
+    response.headers["Content-Type"] = "application/xml"
+    return response
+
+# --- Получение постов с пагинацией ---
 def get_posts(category, page=1, per_page=6):
     pinned = read_client.from_('post').select("*").eq('category', category).eq('is_pinned', True).order('date_posted', desc=True).execute().data
     
