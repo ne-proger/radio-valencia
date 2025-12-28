@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory  # Добавлен send_from_directory
 from postgrest import SyncPostgrestClient
 import os
 import requests
@@ -65,6 +65,11 @@ def inject_datetime():
 @app.template_filter('markdown')
 def convert_markdown(text):
     return markdown.markdown(text)
+
+# === Добавленный маршрут для Google верификации ===
+@app.route('/google57845417bd9a6989.html')
+def google_verification():
+    return send_from_directory(app.root_path, 'google57845417bd9a6989.html')
 
 # --- Получение постов с пагинацией (pinned только на page=1, adjust range) ---
 def get_posts(category, page=1, per_page=6):
