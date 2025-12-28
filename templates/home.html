@@ -16,7 +16,6 @@
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
     {% for post in posts %}
     
-    {# Выделение только для первого pinned на первой странице #}
     {% set is_pinned_and_first = post.is_pinned and loop.index == 1 and page == 1 %}
     
     <div class="bg-white rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:scale-[1.01] overflow-hidden
@@ -28,6 +27,7 @@
                         {% if is_pinned_and_first %}lg:h-96{% endif %}"> 
                 {% if post.main_image_url %}
                     <img src="{{ post.main_image_url }}" alt="{{ post.title }}" 
+                         loading="lazy"
                          class="absolute inset-0 min-w-full min-h-full object-cover">
                 {% else %}
                     <div class="flex items-center justify-center w-full h-full bg-gray-300">

@@ -27,6 +27,7 @@
                         {% if is_pinned_and_first %}lg:h-96{% endif %}"> 
                 {% if post.main_image_url %}
                     <img src="{{ post.main_image_url }}" alt="{{ post.title }}" 
+                         loading="lazy"
                          class="absolute inset-0 min-w-full min-h-full object-cover">
                 {% else %}
                     <div class="flex items-center justify-center w-full h-full bg-gray-300">
