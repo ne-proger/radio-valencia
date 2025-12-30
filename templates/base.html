@@ -15,7 +15,7 @@
     <meta property="og:description" content="{% block og_description %}Свежие новости из Валенсии{% endblock %}">
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ request.url }}">
-    <meta property="og:image" content="https://radio-valencia.onrender.com/static/fav.png">
+    <meta property="og:image" content="https://radio-valencia.onrender.com/static/fav.png"> {# Замени на свою главную картинку, если есть #}
     <meta property="og:site_name" content="RADIO VALENCIA">
     
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='fav.png', v=1) }}">
@@ -58,7 +58,7 @@
                     {% endif %}
                 </nav>
 
-                <!-- Бургер-кнопка -->
+                <!-- Бургер-кнопка и мобильное меню (без изменений) -->
                 <button id="mobile-menu-button" class="md:hidden text-gray-700 focus:outline-none z-50">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" id="burger-icon"/>
@@ -67,7 +67,7 @@
                 </button>
             </div>
 
-            <!-- Выпадающее мобильное меню -->
+            <!-- Выпадающее мобильное меню (без изменений) -->
             <div id="mobile-dropdown" class="md:hidden absolute top-full left-0 right-0 bg-white shadow-lg border-t border-gray-200 overflow-hidden transition-all duration-300 ease-in-out max-h-0">
                 <nav class="flex flex-col py-2">
                     <a href="{{ url_for('home') }}" class="px-6 py-3 {% if current_section == 'home' %}bg-red-50 text-red-700 font-semibold{% else %}text-gray-800 hover:bg-gray-100{% endif %} transition">Главная</a>
@@ -140,5 +140,8 @@
         </div>
     </footer>
 
+    <!-- EasyMDE CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.js"></script>
 </body>
 </html>
