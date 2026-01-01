@@ -22,14 +22,37 @@
         </h1>
     </header>
 
-    <!-- Главная картинка (если есть) -->
-    {% if post.main_image_url %}
-    <div class="mb-12 overflow-hidden rounded-xl shadow-lg">
-        <img src="{{ post.main_image_url }}" alt="{{ post.title }}" class="w-full h-96 object-cover">
+    <!-- Карусель изображений (твоя красивая реализация) -->
+    {% if post.images %}
+    <div class="relative mx-auto my-8 rounded-xl overflow-hidden shadow-2xl">
+        <div class="relative overflow-hidden">
+            <div class="w-full aspect-[4/3] sm:aspect-[16/9] lg:aspect-[21/9] flex items-center justify-center bg-gray-100">
+                {% for img in post.images %}
+                <div class="carousel-item absolute inset-0 transition-opacity duration-1000 ease-in-out {{ 'opacity-100' if loop.first else 'opacity-0' }}">
+                    <img src="{{ img.url }}" alt="{{ post.title }} — изображение {{ loop.index }}" 
+                         loading="lazy"
+                         class="w-full h-full object-cover">
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Кнопки пролистывания (только если >1 изображение) -->
+        {% if post.images|length > 1 %}
+        <button id="prev-btn" class="absolute inset-y-0 left-4 z-10 flex items-center justify-center w-12 h-12 bg-white/90 hover:bg-white rounded-full shadow-lg transition">
+            <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"/>
+            </svg>
+        </button>
+        <button id="next-btn" class="absolute inset-y-0 right-4 z-10 flex items-center justify-center w-12 h-12 bg-white/90 hover:bg-white rounded-full shadow-lg transition">
+            <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/>
+            </svg>
+        </button>
+        {% endif %}
     </div>
     {% endif %}
 
-    <!-- Мета информация -->
     <div class="px-6 py-4 text-left border-b border-gray-200">
         <div class="text-gray-600 text-base flex items-center gap-8 flex-nowrap">
             <time datetime="{{ post.date_posted.isoformat() }}" class="flex items-center shrink-0">
@@ -48,28 +71,12 @@
         </div>
     </div>
 
-    <!-- Текст новости -->
     <section class="px-6 py-12 bg-white">
         <div class="prose prose-lg lg:prose-xl max-w-none mx-auto text-gray-800 leading-relaxed">
             {{ post.content | markdown | safe }}
         </div>
     </section>
 
-    <!-- Галерея дополнительных изображений -->
-    {% if post.images|length > 1 %}
-    <section class="px-6 py-12 bg-gray-50">
-        <h2 class="text-2xl font-bold text-center text-gray-900 mb-8">Галерея</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {% for img in post.images[1:] %}
-            <div class="overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition">
-                <img src="{{ img.url }}" alt="{{ post.title }} — изображение {{ loop.index + 1 }}" loading="lazy" class="w-full h-64 object-cover">
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-    {% endif %}
-
-    <!-- Реакции -->
     <section class="py-12 bg-gray-50 border-t border-b">
         <div class="max-w-4xl mx-auto px-6 flex items-center justify-center gap-16">
             <form method="POST" action="{{ url_for('react', post_id=post.id, reaction_type='like') }}" class="text-center">
@@ -84,14 +91,12 @@
         </div>
     </section>
 
-    <!-- Вернуться на главную -->
     <div class="text-center py-8">
         <a href="{{ url_for('home') }}" class="inline-flex items-center text-red-600 hover:text-red-800 font-semibold text-xl transition">
             ← Вернуться на главную
         </a>
     </div>
 
-    <!-- Комментарии -->
     <section id="comments" class="max-w-4xl mx-auto px-6 py-12">
         <h2 class="text-3xl font-bold text-center text-gray-900 mb-10">Комментарии ({{ post.comments|length }})</h2>
 
@@ -103,7 +108,7 @@
                         <p class="font-bold text-xl text-gray-900">{{ comment.username }}</p>
                         <p class="text-sm text-gray-500">{{ comment.date_posted.strftime('%d.%m.%Y в %H:%M') }}</p>
                     </div>
-                    <p class="text-gray-700 leading-relaxed text-lg">{{ comment.content | linebreaks }}</p>
+                    <p class="text-gray-700 leading-relaxed text-lg">{{ comment.content }}</p>
                 </div>
                 {% endfor %}
             {% else %}
@@ -133,5 +138,40 @@
         </div>
     </section>
 </article>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const items = document.querySelectorAll('.carousel-item');
+        if (items.length <= 1) return;
+
+        let currentItem = 0;
+
+        function updateCarousel() {
+            items.forEach((item, i) => {
+                item.classList.toggle('opacity-100', i === currentItem);
+                item.classList.toggle('opacity-0', i !== currentItem);
+            });
+        }
+
+        const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                currentItem = (currentItem + 1) % items.length;
+                updateCarousel();
+            });
+        }
+
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                currentItem = (currentItem - 1 + items.length) % items.length;
+                updateCarousel();
+            });
+        }
+
+        updateCarousel();
+    });
+</script>
 
 {% endblock %}
