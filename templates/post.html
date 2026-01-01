@@ -22,28 +22,30 @@
         </h1>
     </header>
 
-    <!-- Единая карусель для всех изображений (1 или несколько) -->
+    <!-- Гармоничная единая карусель для всех изображений -->
     {% if post.images %}
-    <div class="relative mx-4 my-12">
-        <div id="carousel-images" class="relative overflow-hidden rounded-2xl shadow-2xl h-64 sm:h-80 lg:h-96">
-            {% for img in post.images %}
-            <div class="carousel-item absolute inset-0 transition-opacity duration-1000 ease-in-out {{ 'opacity-100' if loop.first else 'opacity-0' }}">
-                <img src="{{ img.url | safe }}" alt="{{ post.title }} — изображение {{ loop.index }}" 
-                     loading="lazy"
-                     class="w-full h-full object-contain object-center">
+    <div class="relative mx-auto my-12 max-w-5xl">
+        <div id="carousel-images" class="relative rounded-3xl shadow-2xl bg-gray-100 overflow-hidden">
+            <div class="min-h-96 sm:min-h-[500px] lg:min-h-[600px] flex items-center justify-center">
+                {% for img in post.images %}
+                <div class="carousel-item absolute inset-0 transition-opacity duration-1000 ease-in-out {{ 'opacity-100' if loop.first else 'opacity-0' }}">
+                    <img src="{{ img.url | safe }}" alt="{{ post.title }} — изображение {{ loop.index }}" 
+                         loading="lazy"
+                         class="max-w-full max-h-full object-contain mx-auto">
+                </div>
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
 
-        <!-- Кнопки пролистывания (показываются только если >1 изображения) -->
+        <!-- Кнопки пролистывания (только если >1 изображение) -->
         {% if post.images|length > 1 %}
-        <button id="prev-btn" class="absolute inset-y-0 left-4 z-10 flex items-center justify-center w-12 h-12 bg-white/90 hover:bg-white rounded-full shadow-lg transition">
-            <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button id="prev-btn" class="absolute inset-y-0 left-4 z-10 flex items-center justify-center w-14 h-14 bg-white/90 hover:bg-white rounded-full shadow-2xl transition transform hover:scale-110">
+            <svg class="w-8 h-8 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"/>
             </svg>
         </button>
-        <button id="next-btn" class="absolute inset-y-0 right-4 z-10 flex items-center justify-center w-12 h-12 bg-white/90 hover:bg-white rounded-full shadow-lg transition">
-            <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button id="next-btn" class="absolute inset-y-0 right-4 z-10 flex items-center justify-center w-14 h-14 bg-white/90 hover:bg-white rounded-full shadow-2xl transition transform hover:scale-110">
+            <svg class="w-8 h-8 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/>
             </svg>
         </button>
@@ -137,11 +139,10 @@
     </section>
 </article>
 
-<!-- Скрипт карусели (работает для 1 или нескольких изображений) -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const items = document.querySelectorAll('.carousel-item');
-        if (items.length <= 1) return; // Если 1 изображение — кнопки не нужны
+        if (items.length <= 1) return;
 
         let currentItem = 0;
 
