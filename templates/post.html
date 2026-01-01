@@ -1,170 +1,101 @@
 {% extends "base.html" %}
-
-{% block title %}{{ post.title }} — RADIO VALENCIA{% endblock %}
-
-{% block description %}
-{% set clean_content = post.content | markdown | striptags | truncate(155) %}
-{{ clean_content }}...
-{% endblock %}
-
-{% block og_title %}{{ post.title }} — RADIO VALENCIA{% endblock %}
-{% block og_description %}
-{% set clean_content = post.content | markdown | striptags | truncate(195) %}
-{{ clean_content }}...
-{% endblock %}
-
+{% block title %}{{ post.title }}{% endblock %}
 {% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Хлебные крошки -->
+    <nav class="text-sm breadcrumbs mb-6">
+        <a href="{{ url_for('home') }}" class="text-gray-500 hover:text-red-600">Главная</a> 
+        <span class="mx-2 text-gray-400">/</span>
+        <span class="text-gray-700">{{ post.title }}</span>
+    </nav>
 
-<article class="max-w-4xl mx-auto">
-    <header class="px-6 py-4">
-        <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 leading-tight text-left">
-            {{ post.title }}
-        </h1>
-    </header>
-
-    <!-- Карусель без подложки: изображение просто, полностью видно, гармонично -->
-    {% if post.images %}
-    <div class="relative mx-auto my-8">
-        <div class="relative overflow-hidden">
-            <div class="w-full aspect-[4/3] sm:aspect-[16/9] lg:aspect-[21/9] flex items-center justify-center">
-                {% for img in post.images %}
-                <div class="carousel-item absolute inset-0 transition-opacity duration-1000 ease-in-out {{ 'opacity-100' if loop.first else 'opacity-0' }}">
-                    <img src="{{ img.url | safe }}" alt="{{ post.title }} — изображение {{ loop.index }}" 
-                         loading="lazy"
-                         class="w-full h-full object-contain object-center">
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- Кнопки пролистывания (только если >1 изображение) -->
-        {% if post.images|length > 1 %}
-        <button id="prev-btn" class="absolute inset-y-0 left-4 z-10 flex items-center justify-center w-12 h-12 bg-white/90 hover:bg-white rounded-full shadow-lg transition">
-            <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"/>
-            </svg>
-        </button>
-        <button id="next-btn" class="absolute inset-y-0 right-4 z-10 flex items-center justify-center w-12 h-12 bg-white/90 hover:bg-white rounded-full shadow-lg transition">
-            <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/>
-            </svg>
-        </button>
-        {% endif %}
+    <!-- Главная картинка -->
+    {% if post.main_image_url %}
+    <div class="mb-8 overflow-hidden rounded-xl shadow-lg">
+        <img src="{{ post.main_image_url }}" alt="{{ post.title }}" class="w-full h-96 object-cover">
     </div>
     {% endif %}
 
-    <div class="px-6 py-4 text-left border-b border-gray-200">
-        <div class="text-gray-600 text-base flex items-center gap-8 flex-nowrap">
-            <time datetime="{{ post.date_posted.isoformat() }}" class="flex items-center shrink-0">
-                <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                </svg>
-                {{ post.date_posted.strftime('%d %B %Y') }}
-            </time>
-            <div class="flex items-center shrink-0">
-                <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
-                    <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
-                </svg>
-                {{ post.views }}
+    <!-- Заголовок и мета -->
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">{{ post.title }}</h1>
+    
+    <div class="flex items-center justify-between text-sm text-gray-500 mb-8 border-b pb-4">
+        <div class="flex items-center space-x-4">
+            <span>{{ post.date_posted.strftime('%d.%m.%Y') }}</span>
+            <span>Просмотров: {{ post.views }}</span>
+        </div>
+        <div class="flex items-center space-x-4">
+            <form method="POST" action="{{ url_for('react', post_id=post.id, reaction_type='like') }}" class="inline">
+                <button type="submit" class="flex items-center space-x-1 text-green-600 hover:text-green-800">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h.857a4 4 0 003.787-2.722 4 4 0 003.787-2.722 4 4 0 003.787-2.722 4 4 0 003.787-2.722 4 4 0 003.787-2.722 4 4 0 003.787-2.722A4 4 0 0012.14 2H8.943a4 4 0 00-3.787 2.722A4 4 0 003.787 7.278a4 4 0 00-3.787 2.722 4 4 0 00-3.787 2.722z"/></svg>
+                    <span>{{ post.likes }}</span>
+                </button>
+            </form>
+            <form method="POST" action="{{ url_for('react', post_id=post.id, reaction_type='dislike') }}" class="inline">
+                <button type="submit" class="flex items-center space-x-1 text-red-600 hover:text-red-800">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M18 9.5a1.5 1.5 0 11-3 0v-6a1.5 1.5 0 013 0v6zM14 9.667v-5.43a2 2 0 00-1.105-1.79l-.05-.025A4 4 0 0011.055 2H10.2a4 4 0 00-3.787 2.722A4 4 0 002.626 7.278a4 4 0 00-3.787 2.722A4 4 0 00-3.787 12.722a4 4 0 00-3.787 2.722A4 4 0 00-3.787 18h3.787a4 4 0 003.787-2.722A4 4 0 003.787 12.722a4 4 0 003.787-2.722A4 4 0 0011.055 7.278a4 4 0 003.787-2.722A4 4 0 0018 5.667z"/></svg>
+                    <span>{{ post.dislikes }}</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Текст новости -->
+    <div class="prose prose-lg max-w-none mb-12 text-gray-800">
+        {{ post.content | markdown | safe }}
+    </div>
+
+    <!-- Галерея изображений (если есть дополнительные) -->
+    {% if post.images|length > 1 %}
+    <div class="mb-12">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Галерея</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for img in post.images[1:] %}
+            <div class="overflow-hidden rounded-lg shadow-md hover:shadow-xl transition">
+                <img src="{{ img.url }}" alt="Галерея" class="w-full h-64 object-cover">
             </div>
+            {% endfor %}
         </div>
     </div>
+    {% endif %}
 
-    <section class="px-6 py-12 bg-white">
-        <div class="prose prose-lg lg:prose-xl max-w-none mx-auto text-gray-800 leading-relaxed">
-            {{ post.content | markdown | safe }}
-        </div>
-    </section>
-
-    <section class="py-12 bg-gray-50 border-t border-b">
-        <div class="max-w-4xl mx-auto px-6 flex items-center justify-center gap-16">
-            <form method="POST" action="{{ url_for('react', post_id=post.id, reaction_type='like') }}" class="text-center">
-                <button type="submit" class="text-6xl hover:scale-110 transition transform duration-200">👍</button>
-                <p class="text-3xl font-bold text-green-600 mt-3">{{ post.likes }}</p>
-            </form>
-            
-            <form method="POST" action="{{ url_for('react', post_id=post.id, reaction_type='dislike') }}" class="text-center">
-                <button type="submit" class="text-6xl hover:scale-110 transition transform duration-200">👎</button>
-                <p class="text-3xl font-bold text-red-600 mt-3">{{ post.dislikes }}</p>
-            </form>
-        </div>
-    </section>
-
-    <div class="text-center py-8">
-        <a href="{{ url_for('home') }}" class="inline-flex items-center text-red-600 hover:text-red-800 font-semibold text-xl transition">
-            ← Вернуться на главную
-        </a>
-    </div>
-
-    <section id="comments" class="max-w-4xl mx-auto px-6 py-12">
-        <h2 class="text-3xl font-bold text-center text-gray-900 mb-10">Комментарии ({{ post.comments|length }})</h2>
-
-        <div class="space-y-8 mb-12">
-            {% if post.comments %}
-                {% for comment in post.comments %}
-                <div class="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
-                    <div class="flex justify-between items-center mb-4">
-                        <p class="font-bold text-xl text-gray-900">{{ comment.username }}</p>
-                        <p class="text-sm text-gray-500">{{ comment.date_posted.strftime('%d.%m.%Y в %H:%M') }}</p>
-                    </div>
-                    <p class="text-gray-700 leading-relaxed text-lg">{{ comment.content }}</p>
+    <!-- Комментарии -->
+    <div id="comments" class="mt-12 border-t pt-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Комментарии ({{ post.comments|length }})</h2>
+        
+        {% if post.comments %}
+        <div class="space-y-6">
+            {% for comment in post.comments %}
+            <div class="bg-gray-50 p-6 rounded-lg">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="font-semibold text-gray-800">{{ comment.username }}</span>
+                    <span class="text-sm text-gray-500">{{ comment.date_posted.strftime('%d.%m.%Y %H:%M') }}</span>
                 </div>
-                {% endfor %}
-            {% else %}
-                <p class="text-center text-gray-600 italic text-xl">Комментариев пока нет. Будьте первым!</p>
-            {% endif %}
+                <p class="text-gray-700">{{ comment.content | linebreaks }}</p>
+            </div>
+            {% endfor %}
         </div>
+        {% else %}
+        <p class="text-gray-500">Пока нет комментариев. Будьте первым!</p>
+        {% endif %}
 
-        <div class="bg-gradient-to-br from-red-50 to-orange-50 rounded-3xl p-8 shadow-2xl">
-            <h3 class="text-2xl font-bold text-center text-gray-900 mb-8">Оставить комментарий</h3>
+        <!-- Форма добавления комментария -->
+        <div class="mt-8 bg-white p-6 rounded-lg shadow">
+            <h3 class="text-xl font-semibold mb-4">Оставить комментарий</h3>
             <form method="POST" action="{{ url_for('add_comment', post_id=post.id) }}">
-                <div class="mb-6">
-                    <label for="username" class="block text-lg font-medium text-gray-700 mb-2">Ваше имя</label>
-                    <input type="text" id="username" name="username" required 
-                           class="w-full px-6 py-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-red-200 focus:border-red-500 transition text-lg">
+                <div class="mb-4">
+                    <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Ваше имя</label>
+                    <input type="text" name="username" id="username" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500">
                 </div>
-                <div class="mb-8">
-                    <label for="content" class="block text-lg font-medium text-gray-700 mb-2">Комментарий</label>
-                    <textarea id="content" name="content" rows="6" required 
-                              class="w-full px-6 py-4 border border-gray-300 rounded-xl focus:ring-4 focus:ring-red-200 focus:border-red-500 transition text-lg"></textarea>
+                <div class="mb-4">
+                    <label for="content" class="block text-sm font-medium text-gray-700 mb-1">Комментарий</label>
+                    <textarea name="content" id="content" rows="4" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"></textarea>
                 </div>
-                <div class="text-center">
-                    <button type="submit" class="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-bold py-4 px-12 rounded-full text-xl shadow-2xl transition transform hover:scale-105">
-                        Отправить
-                    </button>
-                </div>
+                <button type="submit" class="px-6 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition">
+                    Отправить
+                </button>
             </form>
         </div>
-    </section>
-</article>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const items = document.querySelectorAll('.carousel-item');
-        if (items.length <= 1) return;
-
-        let currentItem = 0;
-
-        function updateCarousel() {
-            items.forEach((item, i) => {
-                item.classList.toggle('opacity-100', i === currentItem);
-                item.classList.toggle('opacity-0', i !== currentItem);
-            });
-        }
-
-        document.getElementById('next-btn')?.addEventListener('click', () => {
-            currentItem = (currentItem + 1) % items.length;
-            updateCarousel();
-        });
-
-        document.getElementById('prev-btn')?.addEventListener('click', () => {
-            currentItem = (currentItem - 1 + items.length) % items.length;
-            updateCarousel();
-        });
-
-        updateCarousel();
-    });
-</script>
-
+    </div>
+</div>
 {% endblock %}
