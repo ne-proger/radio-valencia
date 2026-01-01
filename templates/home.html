@@ -26,7 +26,7 @@
             <div class="h-40 sm:h-48 overflow-hidden rounded-t-lg bg-gray-200 relative
                         {% if is_pinned_and_first %}lg:h-96{% endif %}"> 
                 {% if post.main_image_url %}
-                    <img src="{{ post.main_image_url | safe }}" alt="{{ post.title }}" 
+                    <img src="{{ post.main_image_url }}" alt="{{ post.title }}" 
                          loading="lazy"
                          class="absolute inset-0 min-w-full min-h-full object-cover">
                 {% else %}
@@ -67,7 +67,6 @@
     {% endfor %}
 </div>
 
-<!-- Пагинация без изменений -->
 {% if pagination.pages > 1 %}
 <div class="mt-8 flex justify-center space-x-1 sm:space-x-2 flex-wrap">
     
