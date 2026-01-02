@@ -22,9 +22,9 @@
         </h1>
     </header>
 
-    <!-- Карусель с удобными кнопками по центру краёв -->
+    <!-- Аккуратная карусель: элементы минималистичные, кнопки на hover -->
     {% if post.images %}
-    <div class="relative mx-auto my-12 rounded-2xl overflow-hidden shadow-2xl">
+    <div class="relative mx-auto my-12 rounded-2xl overflow-hidden shadow-2xl group">  <!-- group для hover -->
         <div class="relative overflow-hidden">
             <div class="w-full aspect-[4/3] sm:aspect-[16/9] lg:aspect-[21/9] bg-gray-100">
                 {% for img in post.images %}
@@ -36,26 +36,26 @@
                 {% endfor %}
             </div>
 
-            <!-- Удобные кнопки по центру краёв -->
+            <!-- Кнопки: видимы на hover, аккуратные -->
             {% if post.images|length > 1 %}
-            <button id="prev-btn" class="absolute top-1/2 -translate-y-1/2 left-6 sm:left-8 lg:left-12 z-20 flex items-center justify-center w-14 h-14 bg-white/90 hover:bg-white rounded-full shadow-2xl transition transform hover:scale-110">
-                <svg class="w-8 h-8 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"/>
+            <button id="prev-btn" class="absolute top-1/2 -translate-y-1/2 left-4 lg:left-8 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center w-10 h-10 bg-white/70 hover:bg-white rounded-full shadow-md">
+                <svg class="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
                 </svg>
             </button>
-            <button id="next-btn" class="absolute top-1/2 -translate-y-1/2 right-6 sm:right-8 lg:right-12 z-20 flex items-center justify-center w-14 h-14 bg-white/90 hover:bg-white rounded-full shadow-2xl transition transform hover:scale-110">
-                <svg class="w-8 h-8 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/>
+            <button id="next-btn" class="absolute top-1/2 -translate-y-1/2 right-4 lg:right-8 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center w-10 h-10 bg-white/70 hover:bg-white rounded-full shadow-md">
+                <svg class="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
                 </svg>
             </button>
             {% endif %}
         </div>
 
-        <!-- Точки-индикаторы (чуть крупнее) -->
+        <!-- Точки: тонкие, аккуратные -->
         {% if post.images|length > 1 %}
-        <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-3 z-20">
+        <div class="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20">
             {% for img in post.images %}
-            <button class="dot w-4 h-4 rounded-full transition {{ 'bg-white shadow-md' if loop.first else 'bg-white/50' }} hover:bg-white"></button>
+            <button class="dot w-2.5 h-2.5 rounded-full transition {{ 'bg-white shadow-sm' if loop.first else 'bg-white/40' }} hover:bg-white"></button>
             {% endfor %}
         </div>
         {% endif %}
@@ -171,11 +171,10 @@
             });
             dots.forEach((dot, i) => {
                 dot.classList.toggle('bg-white', i === currentItem);
-                dot.classList.toggle('bg-white/50', i !== currentItem);
+                dot.classList.toggle('bg-white/40', i !== currentItem);
             });
         }
 
-        // Клик по точкам
         dots.forEach((dot, index) => {
             dot.addEventListener('click', () => {
                 currentItem = index;
@@ -183,13 +182,11 @@
             });
         });
 
-        // Кнопка влево
         prevBtn.addEventListener('click', () => {
             currentItem = (currentItem - 1 + items.length) % items.length;
             updateCarousel();
         });
 
-        // Кнопка вправо
         nextBtn.addEventListener('click', () => {
             currentItem = (currentItem + 1) % items.length;
             updateCarousel();
