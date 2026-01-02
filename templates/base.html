@@ -7,15 +7,18 @@
     <!-- Динамический title -->
     <title>{% block title %}RADIO VALENCIA{% endblock %} - Новости Валенсии</title>
     
-    <!-- Динамическое description (по умолчанию) -->
+    <!-- Динамическое description -->
     <meta name="description" content="{% block description %}RADIO VALENCIA - свежие новости Валенсии: история, финансы, спорт, контакты{% endblock %}">
     
-    <!-- Open Graph теги для шаринга в соцсетях -->
+    <!-- Keywords -->
+    <meta name="keywords" content="новости валенсии, радио валенсия, испания новости, валенсия спорт, валенсия финансы, валенсия история">
+    
+    <!-- Open Graph теги -->
     <meta property="og:title" content="{% block og_title %}RADIO VALENCIA{% endblock %}">
     <meta property="og:description" content="{% block og_description %}Свежие новости из Валенсии{% endblock %}">
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ request.url }}">
-    <meta property="og:image" content="https://radio-valencia.onrender.com/static/fav.png">
+    <meta property="og:image" content="{% block og_image %}https://radio-valencia.onrender.com/static/fav.png{% endblock %}">
     <meta property="og:site_name" content="RADIO VALENCIA">
     
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='fav.png', v=1) }}">
@@ -28,9 +31,12 @@
         }
     </style>
 
-    <!-- Yandex верификация (уже была) -->
+    <!-- Yandex верификация -->
     <meta name="yandex-verification" content="153d53007f9c0949" />
 
+    <!-- EasyMDE CDN (для админки) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.js"></script>
 </head>
 <body class="bg-gray-50 font-sans">
     <header class="bg-white shadow-md sticky top-0 z-50">
@@ -87,7 +93,7 @@
         <div class="header-gradient"></div>
     </header>
 
-    <!-- JS меню (без изменений) -->
+    <!-- JS меню -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const button = document.getElementById('mobile-menu-button');
@@ -139,6 +145,5 @@
             &copy; {{ datetime.now().year }} RADIO VALENCIA. Все права защищены.
         </div>
     </footer>
-
 </body>
 </html>

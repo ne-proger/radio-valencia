@@ -4,7 +4,8 @@ import os
 import requests
 from datetime import datetime
 import markdown
-from xml.etree.ElementTree import Element, SubElement, tostring  # Для генерации sitemap.xml
+from slugify import slugify  # Добавь в requirements.txt: python-slugify
+from xml.etree.ElementTree import Element, SubElement, tostring
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'Тут_нужно_очень_секретный_ключ_для_сессий'
@@ -89,12 +90,11 @@ Sitemap: https://radio-valencia.onrender.com/sitemap.xml"""
     response.headers["Content-Type"] = "text/plain"
     return response
 
-# --- Динамический sitemap.xml ---
+# --- sitemap.xml ---
 @app.route('/sitemap.xml')
 def sitemap():
     base_url = 'https://radio-valencia.onrender.com'
     
-    # Статические страницы
     static_urls = [
         f'{base_url}/',
         f'{base_url}/history',
@@ -103,16 +103,17 @@ def sitemap():
         f'{base_url}/contacts'
     ]
     
-    # Все посты из Supabase
     try:
-        posts = read_client.from_('post').select('id').execute().data
-        post_urls = [f'{base_url}/post/{post["id"]}' for post in posts]
+        posts = read_client.from_('post').select('id,title,date_posted').execute().data
+        post_urls = []
+        for post in posts:
+            slug = slugify(post['title'])
+            post_urls.append(f'{base_url}/post/{post["id"]}/{slug}')
     except:
         post_urls = []
     
     all_urls = static_urls + post_urls
     
-    # Генерация XML
     urlset = Element('urlset', xmlns="http://www.sitemaps.org/schemas/sitemap/0.9")
     
     for url in all_urls:
@@ -147,7 +148,7 @@ def get_posts(category, page=1, per_page=6):
     else:
         adjusted_start = start - len(pinned)
         adjusted_end = end - len(pinned)
-        posts = normal[adjusted_start: adjusted_end]
+        posts = normal[max(0, adjusted_start):adjusted_end]
     
     for post in posts:
         post['date_posted'] = datetime.fromisoformat(post['date_posted'].replace('Z', '+00:00'))
@@ -190,12 +191,17 @@ def contacts():
     weather = get_weather_data()
     return render_template('contacts.html', current_section='contacts', weather=weather)
 
-@app.route("/post/<int:post_id>")
-def post(post_id):
+# --- Пост с slug ---
+@app.route("/post/<int:post_id>/<slug>")
+def post(post_id, slug):
     post_data = read_client.from_('post').select("*").eq('id', post_id).single().execute().data
     if not post_data:
         flash('Новость не найдена', 'danger')
         return redirect(url_for('home'))
+    
+    correct_slug = slugify(post_data['title'])
+    if slug != correct_slug:
+        return redirect(url_for('post', post_id=post_id, slug=correct_slug), code=301)
     
     read_client.from_('post').update({'views': post_data['views'] + 1}).eq('id', post_id).execute()
     
@@ -212,6 +218,15 @@ def post(post_id):
     
     weather = get_weather_data()
     return render_template('post.html', post=post_data, weather=weather, current_section=post_data['category'])
+
+@app.route("/post/<int:post_id>")
+def post_redirect(post_id):
+    post_data = read_client.from_('post').select("title").eq('id', post_id).single().execute().data
+    if post_data:
+        slug = slugify(post_data['title'])
+        return redirect(url_for('post', post_id=post_id, slug=slug), code=301)
+    flash('Новость не найдена', 'danger')
+    return redirect(url_for('home'))
 
 # --- Админка ---
 @app.route("/login", methods=['GET', 'POST'])
@@ -252,7 +267,6 @@ def new_post():
         }
         new_post = write_client.from_('post').insert(data).execute().data[0]
         
-        # Изменено: split по \n (по одной ссылке на строку)
         urls = [u.strip() for u in request.form.get('image_urls', '').split('\n') if u.strip()]
         for i, url in enumerate(urls):
             write_client.from_('image').insert({'post_id': new_post['id'], 'url': url, 'is_main': i == 0}).execute()
@@ -267,7 +281,6 @@ def edit_post(post_id):
         return redirect(url_for('login'))
     post_data = read_client.from_('post').select("*").eq('id', post_id).single().execute().data
     
-    # Изменено: join по \n для textarea
     current_urls = '\n'.join([img['url'] for img in read_client.from_('image').select("url").eq('post_id', post_id).execute().data])
     
     if request.method == 'POST':
@@ -280,7 +293,6 @@ def edit_post(post_id):
         write_client.from_('post').update(data).eq('id', post_id).execute()
         
         write_client.from_('image').delete().eq('post_id', post_id).execute()
-        # Изменено: split по \n
         urls = [u.strip() for u in request.form.get('image_urls', '').split('\n') if u.strip()]
         for i, url in enumerate(urls):
             write_client.from_('image').insert({'post_id': post_id, 'url': url, 'is_main': i == 0}).execute()
@@ -297,7 +309,7 @@ def delete_post(post_id):
     flash('Новость удалена', 'warning')
     return redirect(url_for('admin_dashboard'))
 
-# --- Комментарии ---
+# --- Комментарии и реакции ---
 @app.route("/post/<int:post_id>/comment", methods=['POST'])
 def add_comment(post_id):
     username = request.form['username']
@@ -307,7 +319,6 @@ def add_comment(post_id):
         flash('Комментарий добавлен', 'success')
     return redirect(url_for('post', post_id=post_id) + '#comments')
 
-# --- Реакции ---
 @app.route("/post/<int:post_id>/react/<reaction_type>", methods=['POST'])
 def react(post_id, reaction_type):
     column_map = {'like': 'likes', 'dislike': 'dislikes'}

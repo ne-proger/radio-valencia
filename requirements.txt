@@ -12,3 +12,4 @@ storage3
 
 
 gunicorn
+python-slugify
