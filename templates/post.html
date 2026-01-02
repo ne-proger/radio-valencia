@@ -22,13 +22,13 @@
         </h1>
     </header>
 
-    <!-- Карусель: работает с 1 и несколькими изображениями -->
+    <!-- Карусель: стабильная высота с visibility + opacity -->
     {% if post.images %}
     <div class="relative mx-auto my-12 rounded-2xl overflow-hidden shadow-2xl">
         <div class="relative overflow-hidden">
-            <div class="w-full aspect-[4/3] sm:aspect-[16/9] lg:aspect-[21/9] flex items-center justify-center bg-gray-100 min-h-64">  <!-- Добавлено min-h-64 для стабильности -->
+            <div class="w-full aspect-[4/3] sm:aspect-[16/9] lg:aspect-[21/9] bg-gray-100">
                 {% for img in post.images %}
-                <div class="carousel-item absolute inset-0 transition-opacity duration-1000 ease-in-out {{ 'opacity-100' if loop.first else 'opacity-0' }}">
+                <div class="carousel-item absolute inset-0 transition-opacity duration-1000 ease-in-out {{ 'opacity-100 z-10 visible' if loop.first else 'opacity-0 z-0 invisible' }}">
                     <img src="{{ img.url | safe }}" alt="{{ post.title }} — изображение {{ loop.index }}" 
                          loading="lazy"
                          class="w-full h-full object-cover object-center">
@@ -144,8 +144,13 @@
 
         function updateCarousel() {
             items.forEach((item, i) => {
-                item.classList.toggle('opacity-100', i === currentItem);
-                item.classList.toggle('opacity-0', i !== currentItem);
+                if (i === currentItem) {
+                    item.classList.add('opacity-100', 'z-10', 'visible');
+                    item.classList.remove('opacity-0', 'z-0', 'invisible');
+                } else {
+                    item.classList.add('opacity-0', 'z-0', 'invisible');
+                    item.classList.remove('opacity-100', 'z-10', 'visible');
+                }
             });
             dots.forEach((dot, i) => {
                 dot.classList.toggle('bg-white', i === currentItem);
