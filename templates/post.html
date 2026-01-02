@@ -16,14 +16,12 @@
 {% block content %}
 
 <article class="max-w-4xl mx-auto">
-    <!-- Заголовок: компактный, особенно на мобильных -->
     <header class="px-6 py-3 md:py-4">
         <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 leading-snug text-left">
             {{ post.title }}
         </h1>
     </header>
 
-    <!-- Карусель: меньше отступов на мобильных -->
     {% if post.images %}
     <div class="relative mx-auto my-4 md:my-6 rounded-2xl overflow-hidden shadow-2xl group">
         <div class="relative overflow-hidden">
@@ -37,7 +35,6 @@
                 {% endfor %}
             </div>
 
-            <!-- Кнопки: на hover -->
             {% if post.images|length > 1 %}
             <button id="prev-btn" class="absolute top-1/2 -translate-y-1/2 left-4 lg:left-8 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center w-10 h-10 bg-white/70 hover:bg-white rounded-full shadow-md">
                 <svg class="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -52,7 +49,6 @@
             {% endif %}
         </div>
 
-        <!-- Точки -->
         {% if post.images|length > 1 %}
         <div class="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20">
             {% for img in post.images %}
@@ -63,7 +59,6 @@
     </div>
     {% endif %}
 
-    <!-- Мета: дата + просмотры в одну строку, шрифт меньше, отступы меньше -->
     <div class="px-6 py-4 border-b border-gray-200">
         <div class="text-gray-600 text-sm flex items-center gap-6 flex-nowrap">
             <time datetime="{{ post.date_posted.isoformat() }}" class="flex items-center whitespace-nowrap">
@@ -88,21 +83,22 @@
         </div>
     </section>
 
-    <section class="py-12 bg-gray-50 border-t border-b">
-        <div class="max-w-4xl mx-auto px-6 flex items-center justify-center gap-16">
+    <!-- Блок реакций: минималистичный, компактный -->
+    <section class="py-6 md:py-8 bg-gray-50 border-t border-b">
+        <div class="max-w-4xl mx-auto px-6 flex items-center justify-center gap-8">
             <form method="POST" action="{{ url_for('react', post_id=post.id, reaction_type='like') }}" class="text-center">
-                <button type="submit" class="text-6xl hover:scale-110 transition transform duration-200">👍</button>
-                <p class="text-3xl font-bold text-green-600 mt-3">{{ post.likes }}</p>
+                <button type="submit" class="text-4xl md:text-5xl hover:scale-110 transition transform duration-200">👍</button>
+                <p class="text-2xl font-bold text-green-600 mt-2">{{ post.likes }}</p>
             </form>
             
             <form method="POST" action="{{ url_for('react', post_id=post.id, reaction_type='dislike') }}" class="text-center">
-                <button type="submit" class="text-6xl hover:scale-110 transition transform duration-200">👎</button>
-                <p class="text-3xl font-bold text-red-600 mt-3">{{ post.dislikes }}</p>
+                <button type="submit" class="text-4xl md:text-5xl hover:scale-110 transition transform duration-200">👎</button>
+                <p class="text-2xl font-bold text-red-600 mt-2">{{ post.dislikes }}</p>
             </form>
         </div>
     </section>
 
-    <div class="text-center py-10">
+    <div class="text-center py-8 md:py-10">
         <a href="{{ url_for('home') }}" class="inline-flex items-center text-red-600 hover:text-red-800 font-semibold text-xl transition">
             ← Вернуться на главную
         </a>
