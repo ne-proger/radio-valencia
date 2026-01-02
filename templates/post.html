@@ -22,14 +22,14 @@
         </h1>
     </header>
 
-    <!-- Карусель без кнопок, с точками -->
+    <!-- Карусель без кнопок, с точками (с |safe для Cloudinary URL) -->
     {% if post.images %}
     <div class="relative mx-auto my-12 rounded-2xl overflow-hidden shadow-2xl">
         <div class="relative overflow-hidden">
             <div class="w-full aspect-[4/3] sm:aspect-[16/9] lg:aspect-[21/9] flex items-center justify-center bg-gray-100">
                 {% for img in post.images %}
                 <div class="carousel-item absolute inset-0 transition-opacity duration-1000 ease-in-out {{ 'opacity-100' if loop.first else 'opacity-0' }}">
-                    <img src="{{ img.url }}" alt="{{ post.title }} — изображение {{ loop.index }}" 
+                    <img src="{{ img.url | safe }}" alt="{{ post.title }} — изображение {{ loop.index }}" 
                          loading="lazy"
                          class="w-full h-full object-cover object-center">
                 </div>
