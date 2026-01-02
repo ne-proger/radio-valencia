@@ -252,7 +252,8 @@ def new_post():
         }
         new_post = write_client.from_('post').insert(data).execute().data[0]
         
-        urls = [u.strip() for u in request.form.get('image_urls', '').split(',') if u.strip()]
+        # Изменено: split по \n (по одной ссылке на строку)
+        urls = [u.strip() for u in request.form.get('image_urls', '').split('\n') if u.strip()]
         for i, url in enumerate(urls):
             write_client.from_('image').insert({'post_id': new_post['id'], 'url': url, 'is_main': i == 0}).execute()
         
@@ -266,7 +267,8 @@ def edit_post(post_id):
         return redirect(url_for('login'))
     post_data = read_client.from_('post').select("*").eq('id', post_id).single().execute().data
     
-    current_urls = ', '.join([img['url'] for img in read_client.from_('image').select("url").eq('post_id', post_id).execute().data])
+    # Изменено: join по \n для textarea
+    current_urls = '\n'.join([img['url'] for img in read_client.from_('image').select("url").eq('post_id', post_id).execute().data])
     
     if request.method == 'POST':
         data = {
@@ -278,7 +280,8 @@ def edit_post(post_id):
         write_client.from_('post').update(data).eq('id', post_id).execute()
         
         write_client.from_('image').delete().eq('post_id', post_id).execute()
-        urls = [u.strip() for u in request.form.get('image_urls', '').split(',') if u.strip()]
+        # Изменено: split по \n
+        urls = [u.strip() for u in request.form.get('image_urls', '').split('\n') if u.strip()]
         for i, url in enumerate(urls):
             write_client.from_('image').insert({'post_id': post_id, 'url': url, 'is_main': i == 0}).execute()
         
