@@ -34,8 +34,12 @@
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='fav.png', v=1) }}">
     
+    <!-- Preconnect -->
     <link rel="preconnect" href="https://res.cloudinary.com">
+    <link rel="preconnect" href="https://www.google-analytics.com">
+    <link rel="preconnect" href="https://www.googletagmanager.com">
     
+    <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <style>
@@ -45,9 +49,23 @@
         }
     </style>
 
+    <!-- Yandex верификация -->
     <meta name="yandex-verification" content="153d53007f9c0949" />
 
-    <!-- Structured Data для постов -->
+    <!-- Google Analytics 4 (gtag.js) -->
+    <!-- Меняем G-XXXXXXXXXX на свой Measurement ID из GA4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-FKYGMECK86', {
+        page_path: window.location.pathname + window.location.search,
+        anonymize_ip: true  // Опционально: анонимизация IP (рекомендуется для GDPR)
+      });
+    </script>
+
+    <!-- Structured Data (только для постов) -->
     {% block structured_data %}{% endblock %}
 </head>
 <body class="bg-gray-50 font-sans">
@@ -152,5 +170,6 @@
             &copy; {{ datetime.now().year }} RADIO VALENCIA. Все права защищены.
         </div>
     </footer>
+
 </body>
 </html>
