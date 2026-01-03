@@ -4,25 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <title>RADIO VALENCIA - Новости Валенсии</title>
-    <meta name="description" content="RADIO VALENCIA - свежие новости Валенсии: история, финансы, спорт, контакты">
+    <!-- Динамический title -->
+    <title>{{ title or 'RADIO VALENCIA' }} - Новости Валенсии</title>
     
+    <!-- Динамическое description -->
+    <meta name="description" content="{{ description or 'RADIO VALENCIA - свежие новости Валенсии: история, финансы, спорт, контакты' }}">
+    
+    <!-- Robots -->
     <meta name="robots" content="index, follow">
+    
+    <!-- Canonical -->
     <link rel="canonical" href="{{ request.url }}">
     
-    <meta property="og:title" content="RADIO VALENCIA">
-    <meta property="og:description" content="Свежие новости из Валенсии">
+    <!-- Open Graph -->
+    <meta property="og:title" content="{{ og_title or 'RADIO VALENCIA' }}">
+    <meta property="og:description" content="{{ og_description or 'Свежие новости из Валенсии' }}">
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ request.url }}">
     <meta property="og:image" content="https://radio-valencia.onrender.com/static/fav.png">
     <meta property="og:site_name" content="RADIO VALENCIA">
     <meta property="og:locale" content="ru_RU">
     
+    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="RADIO VALENCIA">
-    <meta name="twitter:description" content="Свежие новости из Валенсии">
+    <meta name="twitter:title" content="{{ og_title or 'RADIO VALENCIA' }}">
+    <meta name="twitter:description" content="{{ og_description or 'Свежие новости из Валенсии' }}">
     <meta name="twitter:image" content="https://radio-valencia.onrender.com/static/fav.png">
     
+    <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='fav.png', v=1) }}">
     
     <link rel="preconnect" href="https://res.cloudinary.com">
@@ -37,6 +46,9 @@
     </style>
 
     <meta name="yandex-verification" content="153d53007f9c0949" />
+
+    <!-- Structured Data для постов -->
+    {% block structured_data %}{% endblock %}
 </head>
 <body class="bg-gray-50 font-sans">
     <header class="bg-white shadow-md sticky top-0 z-50">

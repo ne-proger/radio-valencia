@@ -4,6 +4,7 @@ import os
 import requests
 from datetime import datetime
 import markdown
+import re  # Для очистки HTML-тегов из markdown
 from xml.etree.ElementTree import Element, SubElement, tostring  # Для генерации sitemap.xml
 
 app = Flask(__name__)
@@ -67,6 +68,11 @@ def inject_datetime():
 def convert_markdown(text):
     return markdown.markdown(text)
 
+# Простая очистка HTML-тегов (без внешних библиотек)
+def strip_html_tags(text):
+    clean = re.compile('<.*?>')
+    return re.sub(clean, '', text).replace('\n', ' ').strip()
+
 # Маршруты верификации
 @app.route('/google57845417bd9a6989.html')
 def google_verification():
@@ -94,7 +100,6 @@ Sitemap: https://radio-valencia.onrender.com/sitemap.xml"""
 def sitemap():
     base_url = 'https://radio-valencia.onrender.com'
     
-    # Статические страницы
     static_urls = [
         f'{base_url}/',
         f'{base_url}/history',
@@ -103,7 +108,6 @@ def sitemap():
         f'{base_url}/contacts'
     ]
     
-    # Все посты из Supabase
     try:
         posts = read_client.from_('post').select('id').execute().data
         post_urls = [f'{base_url}/post/{post["id"]}' for post in posts]
@@ -112,7 +116,6 @@ def sitemap():
     
     all_urls = static_urls + post_urls
     
-    # Генерация XML
     urlset = Element('urlset', xmlns="http://www.sitemaps.org/schemas/sitemap/0.9")
     
     for url in all_urls:
@@ -156,39 +159,59 @@ def get_posts(category, page=1, per_page=6):
     
     return posts, total_pages, page
 
-# --- Маршруты разделов ---
+# --- Маршруты разделов с динамическим SEO ---
 @app.route("/")
 @app.route("/page/<int:page>")
 def home(page=1):
     posts, total_pages, current_page = get_posts('news', page)
     weather = get_weather_data()
-    return render_template('home.html', posts=posts, weather=weather, pagination={'pages': total_pages, 'page': current_page, 'has_prev': current_page > 1, 'has_next': current_page < total_pages, 'prev_num': current_page - 1, 'next_num': current_page + 1}, current_section='home')
+    return render_template('home.html', posts=posts, weather=weather, pagination={'pages': total_pages, 'page': current_page, 'has_prev': current_page > 1, 'has_next': current_page < total_pages, 'prev_num': current_page - 1, 'next_num': current_page + 1}, current_section='home',
+                           title='Главная — RADIO VALENCIA',
+                           description='Свежие новости Валенсии: история, финансы, спорт, культура',
+                           og_title='Главная — RADIO VALENCIA',
+                           og_description='Последние новости и статьи из Валенсии')
 
 @app.route("/history")
 @app.route("/history/page/<int:page>")
 def history(page=1):
     posts, total_pages, current_page = get_posts('history', page)
     weather = get_weather_data()
-    return render_template('history.html', posts=posts, weather=weather, pagination={'pages': total_pages, 'page': current_page, 'has_prev': current_page > 1, 'has_next': current_page < total_pages, 'prev_num': current_page - 1, 'next_num': current_page + 1}, current_section='history')
+    return render_template('history.html', posts=posts, weather=weather, pagination={'pages': total_pages, 'page': current_page, 'has_prev': current_page > 1, 'has_next': current_page < total_pages, 'prev_num': current_page - 1, 'next_num': current_page + 1}, current_section='history',
+                           title='История Валенсии — RADIO VALENCIA',
+                           description='Исторические события, факты и личности Валенсии',
+                           og_title='История Валенсии',
+                           og_description='Исторические события и факты о Валенсии')
 
 @app.route("/finance")
 @app.route("/finance/page/<int:page>")
 def finance(page=1):
     posts, total_pages, current_page = get_posts('finance', page)
     weather = get_weather_data()
-    return render_template('finance.html', posts=posts, weather=weather, pagination={'pages': total_pages, 'page': current_page, 'has_prev': current_page > 1, 'has_next': current_page < total_pages, 'prev_num': current_page - 1, 'next_num': current_page + 1}, current_section='finance')
+    return render_template('finance.html', posts=posts, weather=weather, pagination={'pages': total_pages, 'page': current_page, 'has_prev': current_page > 1, 'has_next': current_page < total_pages, 'prev_num': current_page - 1, 'next_num': current_page + 1}, current_section='finance',
+                           title='Финансы Валенсии — RADIO VALENCIA',
+                           description='Финансовые новости, экономика и бизнес Валенсии',
+                           og_title='Финансы Валенсии',
+                           og_description='Финансовые новости и аналитика региона')
 
 @app.route("/sport")
 @app.route("/sport/page/<int:page>")
 def sport(page=1):
     posts, total_pages, current_page = get_posts('sport', page)
     weather = get_weather_data()
-    return render_template('sport.html', posts=posts, weather=weather, pagination={'pages': total_pages, 'page': current_page, 'has_prev': current_page > 1, 'has_next': current_page < total_pages, 'prev_num': current_page - 1, 'next_num': current_page + 1}, current_section='sport')
+    return render_template('sport.html', posts=posts, weather=weather, pagination={'pages': total_pages, 'page': current_page, 'has_prev': current_page > 1, 'has_next': current_page < total_pages, 'prev_num': current_page - 1, 'next_num': current_page + 1}, current_section='sport',
+                           title='Спорт Валенсии — RADIO VALENCIA',
+                           description='Спортивные события, матчи и достижения Валенсии',
+                           og_title='Спорт Валенсии',
+                           og_description='Спортивные новости и результаты')
 
 @app.route("/contacts")
 def contacts():
     weather = get_weather_data()
-    return render_template('contacts.html', current_section='contacts', weather=weather)
+    return render_template('contacts.html', current_section='contacts', weather=weather,
+                           title='Контакты — RADIO VALENCIA',
+                           description='Связаться с редакцией RADIO VALENCIA',
+                           og_title='Контакты',
+                           og_description='Контактная информация и обратная связь')
 
 @app.route("/post/<int:post_id>")
 def post(post_id):
@@ -211,9 +234,20 @@ def post(post_id):
         comment['date_posted'] = datetime.fromisoformat(comment['date_posted'].replace('Z', '+00:00'))
     
     weather = get_weather_data()
-    return render_template('post.html', post=post_data, weather=weather, current_section=post_data['category'])
 
-# --- Админка ---
+    # Генерация description и og_description из контента
+    html_content = markdown.markdown(post_data['content'])
+    clean_text = strip_html_tags(html_content)
+    description = clean_text[:155] + '...' if len(clean_text) > 155 else clean_text
+    og_description = clean_text[:195] + '...' if len(clean_text) > 195 else clean_text
+
+    return render_template('post.html', post=post_data, weather=weather, current_section=post_data['category'],
+                           title=f"{post_data['title']} — RADIO VALENCIA",
+                           description=description,
+                           og_title=post_data['title'],
+                           og_description=og_description)
+
+# --- Админка (остальное без изменений) ---
 @app.route("/login", methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -252,7 +286,6 @@ def new_post():
         }
         new_post = write_client.from_('post').insert(data).execute().data[0]
         
-        # Изменено: split по \n (по одной ссылке на строку)
         urls = [u.strip() for u in request.form.get('image_urls', '').split('\n') if u.strip()]
         for i, url in enumerate(urls):
             write_client.from_('image').insert({'post_id': new_post['id'], 'url': url, 'is_main': i == 0}).execute()
@@ -267,7 +300,6 @@ def edit_post(post_id):
         return redirect(url_for('login'))
     post_data = read_client.from_('post').select("*").eq('id', post_id).single().execute().data
     
-    # Изменено: join по \n для textarea
     current_urls = '\n'.join([img['url'] for img in read_client.from_('image').select("url").eq('post_id', post_id).execute().data])
     
     if request.method == 'POST':
@@ -280,7 +312,6 @@ def edit_post(post_id):
         write_client.from_('post').update(data).eq('id', post_id).execute()
         
         write_client.from_('image').delete().eq('post_id', post_id).execute()
-        # Изменено: split по \n
         urls = [u.strip() for u in request.form.get('image_urls', '').split('\n') if u.strip()]
         for i, url in enumerate(urls):
             write_client.from_('image').insert({'post_id': post_id, 'url': url, 'is_main': i == 0}).execute()
@@ -297,7 +328,6 @@ def delete_post(post_id):
     flash('Новость удалена', 'warning')
     return redirect(url_for('admin_dashboard'))
 
-# --- Комментарии ---
 @app.route("/post/<int:post_id>/comment", methods=['POST'])
 def add_comment(post_id):
     username = request.form['username']
@@ -307,7 +337,6 @@ def add_comment(post_id):
         flash('Комментарий добавлен', 'success')
     return redirect(url_for('post', post_id=post_id) + '#comments')
 
-# --- Реакции ---
 @app.route("/post/<int:post_id>/react/<reaction_type>", methods=['POST'])
 def react(post_id, reaction_type):
     column_map = {'like': 'likes', 'dislike': 'dislikes'}
