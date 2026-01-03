@@ -1,16 +1,33 @@
 {% extends "base.html" %}
 
-{% block title %}{{ post.title }} — RADIO VALENCIA{% endblock %}
-
-{% block description %}
-{% set clean_content = post.content | markdown | striptags | truncate(155) %}
-{{ clean_content }}...
-{% endblock %}
-
-{% block og_title %}{{ post.title }} — RADIO VALENCIA{% endblock %}
-{% block og_description %}
-{% set clean_content = post.content | markdown | striptags | truncate(195) %}
-{{ clean_content }}...
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "{{ request.url }}"
+  },
+  "headline": "{{ post.title }}",
+  "datePublished": "{{ post.date_posted.isoformat() }}",
+  "dateModified": "{{ post.date_posted.isoformat() }}",
+  "author": {
+    "@type": "Organization",
+    "name": "RADIO VALENCIA"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "RADIO VALENCIA",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://radio-valencia.onrender.com/static/fav.png"
+    }
+  },
+  "image": {% if post.images %}"{{ post.images[0].url | safe }}"{% else %}"https://radio-valencia.onrender.com/static/fav.png"{% endif %},
+  "description": "{{ description }}"
+}
+</script>
 {% endblock %}
 
 {% block content %}
@@ -83,9 +100,8 @@
         </div>
     </section>
 
-    <!-- Реакции: разнесены по сторонам, компактно -->
     <section class="py-6 md:py-8 bg-gray-50 border-t border-b">
-        <div class="max-w-4xl mx-auto px-6 flex items-center justify-between">  <!-- justify-between вместо justify-center + gap -->
+        <div class="max-w-4xl mx-auto px-6 flex items-center justify-between">
             <form method="POST" action="{{ url_for('react', post_id=post.id, reaction_type='like') }}" class="text-center">
                 <button type="submit" class="text-4xl md:text-5xl hover:scale-110 transition transform duration-200">👍</button>
                 <p class="text-2xl font-bold text-green-600 mt-2">{{ post.likes }}</p>
@@ -98,21 +114,19 @@
         </div>
     </section>
 
-    <!-- Ссылка "Вернуться" ближе к комментариям -->
-    <div class="text-center py-6">  <!-- было py-8 md:py-10 -->
+    <div class="text-center py-6">
         <a href="{{ url_for('home') }}" class="inline-flex items-center text-red-600 hover:text-red-800 font-semibold text-xl transition">
             ← Вернуться на главную
         </a>
     </div>
 
-    <!-- Комментарии: плоские, без тени, компактнее -->
     <section id="comments" class="max-w-4xl mx-auto px-6 py-12">
-        <h2 class="text-3xl font-bold text-center text-gray-900 mb-8">Комментарии ({{ post.comments|length }})</h2>  <!-- mb-8 вместо mb-10 -->
+        <h2 class="text-3xl font-bold text-center text-gray-900 mb-8">Комментарии ({{ post.comments|length }})</h2>
 
-        <div class="space-y-4 mb-12">  <!-- space-y-4 вместо space-y-8 -->
+        <div class="space-y-4 mb-12">
             {% if post.comments %}
                 {% for comment in post.comments %}
-                <div class="bg-white rounded-2xl p-6">  <!-- убраны shadow-lg, border -->
+                <div class="bg-white rounded-2xl p-6">
                     <div class="flex justify-between items-center mb-3">
                         <p class="font-bold text-xl text-gray-900">{{ comment.username }}</p>
                         <p class="text-sm text-gray-500">{{ comment.date_posted.strftime('%d.%m.%Y в %H:%M') }}</p>
