@@ -7,20 +7,39 @@
     <!-- Динамический title -->
     <title>{% block title %}RADIO VALENCIA{% endblock %} - Новости Валенсии</title>
     
-    <!-- Динамическое description (по умолчанию) -->
+    <!-- Динамическое description -->
     <meta name="description" content="{% block description %}RADIO VALENCIA - свежие новости Валенсии: история, финансы, спорт, контакты{% endblock %}">
     
-    <!-- Open Graph теги для шаринга в соцсетях -->
+    <!-- Robots -->
+    <meta name="robots" content="index, follow">
+    
+    <!-- Canonical -->
+    <link rel="canonical" href="{{ request.url }}">
+    
+    <!-- Open Graph теги -->
     <meta property="og:title" content="{% block og_title %}RADIO VALENCIA{% endblock %}">
     <meta property="og:description" content="{% block og_description %}Свежие новости из Валенсии{% endblock %}">
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ request.url }}">
     <meta property="og:image" content="https://radio-valencia.onrender.com/static/fav.png">
     <meta property="og:site_name" content="RADIO VALENCIA">
+    <meta property="og:locale" content="ru_RU">
     
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block og_title %}RADIO VALENCIA{% endblock %}">
+    <meta name="twitter:description" content="{% block og_description %}Свежие новости из Валенсии{% endblock %}">
+    <meta name="twitter:image" content="https://radio-valencia.onrender.com/static/fav.png">
+    
+    <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='fav.png', v=1) }}">
     
+    <!-- Preconnect к Cloudinary (ускоряет загрузку изображений) -->
+    <link rel="preconnect" href="https://res.cloudinary.com">
+    
+    <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <style>
         .header-gradient {
             background-image: linear-gradient(to right, #ef4444, #f97316); 
@@ -28,9 +47,11 @@
         }
     </style>
 
-    <!-- Yandex верификация (уже была) -->
+    <!-- Yandex верификация -->
     <meta name="yandex-verification" content="153d53007f9c0949" />
 
+    <!-- Structured Data JSON-LD (только на страницах постов — переопределим в post.html) -->
+    {% block structured_data %}{% endblock %}
 </head>
 <body class="bg-gray-50 font-sans">
     <header class="bg-white shadow-md sticky top-0 z-50">
@@ -87,7 +108,7 @@
         <div class="header-gradient"></div>
     </header>
 
-    <!-- JS меню (без изменений) -->
+    <!-- JS меню -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const button = document.getElementById('mobile-menu-button');
