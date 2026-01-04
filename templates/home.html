@@ -7,18 +7,12 @@
 
 {% block content %}
 <div class="mb-8 flex justify-center">
-    <div class="w-full max-w-screen-xl px-4">
+    <div class="w-full max-w-screen-xl">
         {% include '_weather_widget.html' %}
     </div>
 </div>
 
-<div class="flex justify-center">
-    <div class="w-full max-w-screen-xl px-4">
-        <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-6 border-b-2 border-gray-200 pb-2 text-center">
-            Последние Новости
-        </h2>
-    </div>
-</div>
+<h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-6 border-b-2 border-gray-200 pb-2 text-center max-w-screen-xl mx-auto">Последние Новости</h2>
 
 {% if posts %}
 {% set pinned_post = none %}
@@ -33,56 +27,46 @@
 {% endfor %}
 
 {% if pinned_post %}
-<div class="flex justify-center mb-10">
-    <div class="w-full max-w-screen-2xl px-4">
-        <div class="bg-white rounded-xl shadow-xl overflow-hidden">
-            <a href="{{ url_for('post', post_id=pinned_post.id) }}" class="block">
-                <div class="relative h-64 sm:h-80 lg:h-[480px] xl:h-[560px] overflow-hidden bg-gray-200">
-                    {% if pinned_post.main_image_url %}
-                        <img src="{{ pinned_post.main_image_url }}" alt="{{ pinned_post.title }}"
-                             loading="lazy"
-                             class="absolute inset-0 w-full h-full object-cover">
-                    {% else %}
-                        <div class="flex items-center justify-center w-full h-full bg-gray-300 text-gray-600 text-xl font-semibold">
-                            Нет иллюстрации
-                        </div>
-                    {% endif %}
-                </div>
-            </a>
-
-            <div class="p-6 lg:p-8">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-sm font-semibold uppercase tracking-wide text-red-600 bg-red-50 px-3 py-1 rounded">
-                        ЗАКРЕПЛЕНО
-                    </span>
-                    <span class="text-sm text-gray-500">
-                        {{ pinned_post.date_posted.strftime('%d.%m.%Y %H:%M') }}
-                    </span>
-                </div>
-
-                <a href="{{ url_for('post', post_id=pinned_post.id) }}" class="block">
-                    <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight hover:text-red-700 transition">
-                        {{ pinned_post.title }}
-                    </h2>
-                </a>
-
-                <p class="mt-4 text-gray-700 text-base lg:text-lg line-clamp-4 lg:line-clamp-5">
-                    {{ pinned_post.content | markdown | striptags }}
-                </p>
-
-                <div class="mt-4">
-                    <a href="{{ url_for('post', post_id=pinned_post.id) }}"
-                       class="inline-flex items-center text-red-600 hover:text-red-800 font-medium">
-                        Читать полностью →
-                    </a>
-                </div>
+<div class="featured-full mb-12">
+    <div class="bg-white shadow-xl rounded-xl overflow-hidden">
+        <a href="{{ url_for('post', post_id=pinned_post.id) }}" class="block">
+            <div class="relative h-64 sm:h-80 lg:h-[600px] overflow-hidden">
+                {% if pinned_post.main_image_url %}
+                    <img src="{{ pinned_post.main_image_url }}" alt="{{ pinned_post.title }}"
+                         loading="lazy"
+                         class="w-full h-full object-cover">
+                {% else %}
+                    <div class="flex items-center justify-center w-full h-full bg-gray-300 text-gray-600 text-2xl font-bold">
+                        Нет иллюстрации
+                    </div>
+                {% endif %}
             </div>
+        </a>
+        <div class="p-6 lg:p-12 max-w-screen-xl mx-auto">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-sm font-bold uppercase text-red-600 bg-red-50 px-4 py-2 rounded-full">
+                    ЗАКРЕПЛЕНО
+                </span>
+                <span class="text-sm text-gray-500">
+                    {{ pinned_post.date_posted.strftime('%d.%m.%Y %H:%M') }}
+                </span>
+            </div>
+            <a href="{{ url_for('post', post_id=pinned_post.id) }}" class="block">
+                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight hover:text-red-700 transition mb-6">
+                    {{ pinned_post.title }}
+                </h2>
+            </a>
+            <p class="text-lg lg:text-xl text-gray-700 line-clamp-5 mb-6">
+                {{ pinned_post.content | markdown | striptags }}
+            </p>
+            <a href="{{ url_for('post', post_id=pinned_post.id) }}" class="text-red-600 hover:text-red-800 font-semibold text-lg">
+                Читать полностью →
+            </a>
         </div>
     </div>
 </div>
 {% endif %}
 
-<!-- Обычная сетка – только незакреплённые новости -->
 {% set grouped_posts = {} %}
 {% for post in normal_posts %}
     {% set date_key = post.date_posted.strftime('%d.%m.%Y') %}
@@ -93,89 +77,77 @@
 {% endfor %}
 
 {% if grouped_posts %}
-<div class="flex justify-center">
-    <div class="w-full max-w-screen-xl px-4">
-        {% for date, group in grouped_posts.items() %}
-            <h3 class="text-lg font-semibold text-gray-600 mb-4 text-center mt-8 first:mt-0">
-                {{ date }}
-            </h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {% for post in group %}
-                <div class="bg-white rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:scale-[1.02] overflow-hidden">
-                    <a href="{{ url_for('post', post_id=post.id) }}" class="block">
-                        <div class="h-48 sm:h-52 overflow-hidden bg-gray-200">
-                            {% if post.main_image_url %}
-                                <img src="{{ post.main_image_url }}" alt="{{ post.title }}"
-                                     loading="lazy"
-                                     class="w-full h-full object-cover">
-                            {% else %}
-                                <div class="flex items-center justify-center h-full bg-gray-300 text-gray-600 text-sm">
-                                    Нет иллюстрации
-                                </div>
-                            {% endif %}
-                        </div>
-                    </a>
-                    <div class="p-4">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-xs text-gray-500">
-                                {{ post.date_posted.strftime('%H:%M') }}
-                            </span>
-                        </div>
-                        <a href="{{ url_for('post', post_id=post.id) }}" class="block">
-                            <h3 class="font-semibold text-gray-900 leading-snug hover:text-red-600 transition text-lg line-clamp-3">
-                                {{ post.title }}
-                            </h3>
-                        </a>
-                        <p class="mt-2 text-gray-600 text-sm line-clamp-3">
-                            {{ post.content | markdown | striptags }}
-                        </p>
+<div class="max-w-screen-xl mx-auto">
+    {% for date, group in grouped_posts.items() %}
+        <h3 class="text-xl font-semibold text-gray-600 mb-6 text-center mt-12 first:mt-0">
+            {{ date }}
+        </h3>
+        <div class="flex flex-wrap justify-center gap-8">
+            {% for post in group %}
+            <div class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition duration-300 w-full max-w-sm">
+                <a href="{{ url_for('post', post_id=post.id) }}" class="block">
+                    <div class="h-56 overflow-hidden rounded-t-xl">
+                        {% if post.main_image_url %}
+                            <img src="{{ post.main_image_url }}" alt="{{ post.title }}"
+                                 loading="lazy"
+                                 class="w-full h-full object-cover">
+                        {% else %}
+                            <div class="flex items-center justify-center h-full bg-gray-300 text-gray-600">
+                                Нет иллюстрации
+                            </div>
+                        {% endif %}
                     </div>
+                </a>
+                <div class="p-5">
+                    <span class="text-sm text-gray-500 block mb-2">
+                        {{ post.date_posted.strftime('%H:%M') }}
+                    </span>
+                    <a href="{{ url_for('post', post_id=post.id) }}" class="block">
+                        <h3 class="text-xl font-bold text-gray-900 hover:text-red-600 transition line-clamp-3 mb-3">
+                            {{ post.title }}
+                        </h3>
+                    </a>
+                    <p class="text-gray-600 text-base line-clamp-4">
+                        {{ post.content | markdown | striptags }}
+                    </p>
                 </div>
-                {% endfor %}
             </div>
-        {% endfor %}
-    </div>
+            {% endfor %}
+        </div>
+    {% endfor %}
 </div>
 {% endif %}
 
-<!-- Пагинация -->
 {% if pagination.pages > 1 %}
-<div class="mt-12 flex justify-center">
-    <div class="flex space-x-2 flex-wrap">
+<div class="mt-16 flex justify-center max-w-screen-xl mx-auto">
+    <div class="flex flex-wrap justify-center gap-3">
         {% if pagination.has_prev %}
-            <a href="{{ url_for('home', page=pagination.prev_num) }}"
-               class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition">
+            <a href="{{ url_for('home', page=pagination.prev_num) }}" class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
                 ← Предыдущая
             </a>
-        {% else %}
-            <span class="px-4 py-2 bg-gray-200 text-gray-400 rounded cursor-not-allowed">← Предыдущая</span>
         {% endif %}
 
         {% for p in range(1, pagination.pages + 1) %}
             {% if p == page %}
-                <span class="px-4 py-2 bg-red-100 text-red-800 font-bold rounded">{{ p }}</span>
+                <span class="px-6 py-3 bg-red-100 text-red-800 font-bold rounded-lg">{{ p }}</span>
             {% else %}
-                <a href="{{ url_for('home', page=p) }}"
-                   class="px-4 py-2 bg-white border border-gray-300 rounded hover:bg-gray-100 transition">
+                <a href="{{ url_for('home', page=p) }}" class="px-6 py-3 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 transition">
                     {{ p }}
                 </a>
             {% endif %}
         {% endfor %}
 
         {% if pagination.has_next %}
-            <a href="{{ url_for('home', page=pagination.next_num) }}"
-               class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition">
+            <a href="{{ url_for('home', page=pagination.next_num) }}" class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
                 Следующая →
             </a>
-        {% else %}
-            <span class="px-4 py-2 bg-gray-200 text-gray-400 rounded cursor-not-allowed">Следующая →</span>
         {% endif %}
     </div>
 </div>
 {% endif %}
 
 {% else %}
-<div class="text-center text-gray-600 py-12">
+<div class="text-center text-gray-600 text-xl py-20">
     Пока нет опубликованных новостей.
 </div>
 {% endif %}
