@@ -15,7 +15,7 @@
     
     <!-- Canonical -->
     <link rel="canonical" href="{{ request.url }}">
-    
+
     <!-- Open Graph -->
     <meta property="og:title" content="{{ og_title or 'RADIO VALENCIA' }}">
     <meta property="og:description" content="{{ og_description or 'Свежие новости из Валенсии' }}">
@@ -47,6 +47,14 @@
             background-image: linear-gradient(to right, #ef4444, #f97316); 
             height: 4px;
         }
+        .featured-full {
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            right: 50%;
+            margin-left: -50vw;
+            margin-right: -50vw;
+        }
     </style>
 
     <!-- Yandex верификация -->
@@ -70,7 +78,7 @@
 </head>
 <body class="bg-gray-50 font-sans">
     <header class="bg-white shadow-md sticky top-0 z-50">
-        <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-4">  <!-- Увеличен контейнер -->
+        <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div class="flex justify-between items-center relative">
                 <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
                     <a href="{{ url_for('home') }}" class="text-red-600 hover:text-red-800 transition duration-300">
@@ -151,7 +159,7 @@
         });
     </script>
 
-    <main class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">  <!-- Увеличен контейнер -->
+    <main class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -166,7 +174,7 @@
     </main>
 
     <footer class="bg-white border-t mt-12">
-        <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm text-gray-500">  <!-- Увеличен контейнер -->
+        <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm text-gray-500">
             &copy; {{ datetime.now().year }} RADIO VALENCIA. Все права защищены.
         </div>
     </footer>
