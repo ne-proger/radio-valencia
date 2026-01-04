@@ -27,9 +27,9 @@
 {% endfor %}
 
 {% if pinned_post %}
-<div class="featured-full mb-12 bg-white shadow-2xl rounded-xl overflow-hidden">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-0">
-        <div class="lg:col-span-2 relative h-64 sm:h-80 lg:h-96 overflow-hidden">
+<div class="featured-full mb-16 bg-white shadow-2xl overflow-hidden rounded-xl">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
+        <div class="relative h-64 sm:h-80 lg:h-full min-h-96 overflow-hidden">
             <a href="{{ url_for('post', post_id=pinned_post.id) }}" class="block">
                 {% if pinned_post.main_image_url %}
                     <img src="{{ pinned_post.main_image_url }}" alt="{{ pinned_post.title }}"
@@ -42,7 +42,7 @@
                 {% endif %}
             </a>
         </div>
-        <div class="p-8 lg:p-12 flex flex-col justify-center">
+        <div class="p-8 lg:p-16 flex flex-col justify-center">
             <span class="text-sm font-bold uppercase text-red-600 bg-red-50 px-4 py-2 rounded-full mb-4">
                 ЗАКРЕПЛЕНО
             </span>
@@ -50,14 +50,14 @@
                 {{ pinned_post.date_posted.strftime('%d.%m.%Y %H:%M') }}
             </span>
             <a href="{{ url_for('post', post_id=pinned_post.id) }}" class="block">
-                <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight hover:text-red-700 transition mb-6">
+                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight hover:text-red-700 transition mb-6">
                     {{ pinned_post.title }}
                 </h2>
             </a>
-            <p class="text-base lg:text-lg text-gray-700 line-clamp-6 mb-6">
+            <p class="text-lg lg:text-xl text-gray-700 line-clamp-6 mb-8">
                 {{ pinned_post.content | markdown | striptags }}
             </p>
-            <a href="{{ url_for('post', post_id=pinned_post.id) }}" class="text-red-600 hover:text-red-800 font-bold text-lg">
+            <a href="{{ url_for('post', post_id=pinned_post.id) }}" class="text-red-600 hover:text-red-800 font-bold text-xl">
                 Читать полностью →
             </a>
         </div>
@@ -75,7 +75,7 @@
 {% endfor %}
 
 {% if grouped_posts %}
-<div class="max-w-screen-xl mx-auto">
+<div class="max-w-screen-xl mx-auto px-4">
     {% for date, group in grouped_posts.items() %}
         <h3 class="text-xl font-semibold text-gray-600 mb-6 text-center mt-12 first:mt-0">
             {{ date }}
