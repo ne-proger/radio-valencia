@@ -19,7 +19,7 @@
     {% set is_pinned_and_first = post.is_pinned and loop.index == 1 and page == 1 %}
     
     <div class="bg-white rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:scale-[1.01] overflow-hidden
-                {% if is_pinned_and_first %}lg:col-span-2 lg:row-span-2{% endif %}"> 
+                {% if is_pinned_and_first %}lg:col-span-3{% endif %}"> 
         
         <a href="{{ url_for('post', post_id=post.id) }}" class="block">
             
