@@ -4,19 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- Динамический title -->
     <title>{{ title or 'RADIO VALENCIA' }} - Новости Валенсии</title>
     
-    <!-- Динамическое description -->
     <meta name="description" content="{{ description or 'RADIO VALENCIA - свежие новости Валенсии: история, финансы, спорт, контакты' }}">
     
-    <!-- Robots -->
     <meta name="robots" content="index, follow">
     
-    <!-- Canonical -->
     <link rel="canonical" href="{{ request.url }}">
     
-    <!-- Open Graph -->
     <meta property="og:title" content="{{ og_title or 'RADIO VALENCIA' }}">
     <meta property="og:description" content="{{ og_description or 'Свежие новости из Валенсии' }}">
     <meta property="og:type" content="website">
@@ -25,21 +20,17 @@
     <meta property="og:site_name" content="RADIO VALENCIA">
     <meta property="og:locale" content="ru_RU">
     
-    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{ og_title or 'RADIO VALENCIA' }}">
     <meta name="twitter:description" content="{{ og_description or 'Свежие новости из Валенсии' }}">
     <meta name="twitter:image" content="https://radio-valencia.onrender.com/static/fav.png">
     
-    <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='fav.png', v=1) }}">
     
-    <!-- Preconnect -->
     <link rel="preconnect" href="https://res.cloudinary.com">
     <link rel="preconnect" href="https://www.google-analytics.com">
     <link rel="preconnect" href="https://www.googletagmanager.com">
     
-    <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <style>
@@ -48,16 +39,17 @@
             height: 4px;
         }
         .featured-full {
-            width: 100vw !important;
-            position: relative !important;
-            left: calc(-50vw + 50%) !important;
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            right: 50%;
+            margin-left: -50vw;
+            margin-right: -50vw;
         }
     </style>
 
-    <!-- Yandex верификация -->
     <meta name="yandex-verification" content="153d53007f9c0949" />
 
-    <!-- Google Analytics 4 (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -69,7 +61,6 @@
       });
     </script>
 
-    <!-- Structured Data (только для постов) -->
     {% block structured_data %}{% endblock %}
 </head>
 <body class="bg-gray-50 font-sans">
