@@ -41,6 +41,8 @@
                          alt="{{ pinned_post.title }}"
                          class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                          loading="lazy">
+
+                    <!-- overlay -->
                     <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
                 </div>
             </a>
@@ -84,26 +86,22 @@
                     <img src="{{ editor_main.main_image_url }}"
                          class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                          loading="lazy">
+
                     <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
                 </div>
             </a>
 
             <div class="p-6">
-                <span class="text-xs text-gray-400 block mb-2">
-                    {{ editor_main.date_posted.strftime('%d.%m.%Y %H:%M') }}
-                </span>
-
                 <h2 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-3 group-hover:text-red-600 transition">
                     {{ editor_main.title }}
                 </h2>
-
                 <p class="text-gray-700 line-clamp-3">
                     {{ editor_main.content | markdown | striptags }}
                 </p>
             </div>
         </div>
 
-        <!-- ВТОРОСТЕПЕННЫЕ (ТЕПЕРЬ КАК ВСЕ) -->
+        <!-- ВТОРОСТЕПЕННЫЕ -->
         <div class="flex flex-col gap-6">
             {% for post in editor_side %}
             <div class="bg-white rounded-xl shadow-lg overflow-hidden group">
@@ -112,22 +110,14 @@
                         <img src="{{ post.main_image_url }}"
                              class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                              loading="lazy">
+
                         <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
                     </div>
                 </a>
-
                 <div class="p-4">
-                    <span class="text-xs text-gray-400 block mb-2">
-                        {{ post.date_posted.strftime('%d.%m.%Y %H:%M') }}
-                    </span>
-
-                    <h3 class="text-lg font-bold text-gray-900 line-clamp-2 group-hover:text-red-600 transition mb-2">
+                    <h3 class="text-lg font-bold text-gray-900 line-clamp-2 group-hover:text-red-600 transition">
                         {{ post.title }}
                     </h3>
-
-                    <p class="text-gray-600 line-clamp-2 text-sm">
-                        {{ post.content | markdown | striptags }}
-                    </p>
                 </div>
             </div>
             {% endfor %}
@@ -146,19 +136,14 @@
                 <img src="{{ post.main_image_url }}"
                      class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                      loading="lazy">
+
                 <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
             </div>
         </a>
-
         <div class="p-4">
-            <span class="text-xs text-gray-400 block mb-2">
-                {{ post.date_posted.strftime('%d.%m.%Y %H:%M') }}
-            </span>
-
             <h3 class="text-xl font-bold text-gray-900 line-clamp-3 mb-2 group-hover:text-red-600 transition">
                 {{ post.title }}
             </h3>
-
             <p class="text-gray-600 line-clamp-2">
                 {{ post.content | markdown | striptags }}
             </p>
@@ -173,6 +158,7 @@
 {% if pagination.pages > 1 %}
 <div class="mt-12 flex justify-center">
     <div class="flex flex-col sm:flex-row gap-3 items-center">
+
         {% if pagination.has_prev %}
             <a href="{{ url_for('home', page=pagination.prev_num) }}"
                class="w-full sm:w-auto px-5 py-3 bg-red-600 text-white rounded text-center hover:bg-red-700 transition">
@@ -201,6 +187,7 @@
                 Следующая →
             </a>
         {% endif %}
+
     </div>
 </div>
 {% endif %}
