@@ -17,12 +17,11 @@
 
 {% if posts %}
 
-{# ================= HERO PINNED ================= #}
+{# ================= HERO / PINNED ================= #}
 {% set pinned = posts[0] if posts[0].is_pinned else none %}
 
 {% if pinned %}
-<a href="{{ url_for('post', post_id=pinned.id) }}"
-   class="block mb-12">
+<a href="{{ url_for('post', post_id=pinned.id) }}" class="block mb-12">
 
     <div class="relative w-full aspect-[16/9] sm:aspect-[21/9] rounded-2xl overflow-hidden shadow-lg bg-black">
 
@@ -33,11 +32,11 @@
             class="absolute inset-0 w-full h-full object-contain sm:object-cover">
         {% endif %}
 
-        <!-- GRADIENT OVERLAY -->
-        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+        <!-- ГРАДИЕНТ ТОЛЬКО СНИЗУ -->
+        <div class="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
 
-        <!-- TEXT -->
-        <div class="absolute inset-0 flex items-end">
+        <!-- ТЕКСТ -->
+        <div class="absolute inset-x-0 bottom-0">
             <div class="p-4 sm:p-8 max-w-4xl text-white">
 
                 <div class="text-xs sm:text-sm opacity-80 mb-2">
@@ -48,8 +47,8 @@
                     {{ pinned.title }}
                 </h1>
 
-                <p class="hidden sm:block text-base sm:text-lg opacity-90 line-clamp-3">
-                    {{ pinned.content | markdown | striptags }}
+                <p class="hidden sm:block text-base sm:text-lg opacity-90 line-clamp-2">
+                    {{ pinned.content | striptags }}
                 </p>
 
             </div>
@@ -64,14 +63,14 @@
 
 {% for post in posts if not post.is_pinned %}
 <a href="{{ url_for('post', post_id=post.id) }}"
-   class="group block bg-white rounded-xl shadow hover:shadow-xl transition overflow-hidden">
+   class="block bg-white rounded-xl shadow hover:shadow-xl transition overflow-hidden">
 
     <div class="relative aspect-[16/9] bg-gray-100 flex items-center justify-center overflow-hidden">
         {% if post.main_image_url %}
         <img
             src="{{ post.main_image_url }}"
             alt="{{ post.title }}"
-            class="w-full h-full object-contain sm:object-cover transition-transform duration-500 group-hover:scale-105">
+            class="w-full h-full object-contain sm:object-cover transition-transform duration-500 hover:scale-105">
         {% endif %}
     </div>
 
@@ -85,7 +84,7 @@
         </h3>
 
         <p class="text-sm text-gray-600 line-clamp-3">
-            {{ post.content | markdown | striptags }}
+            {{ post.content | striptags }}
         </p>
     </div>
 </a>
@@ -104,7 +103,9 @@
 
         {% for p in range(1, pagination.pages + 1) %}
             {% if p == page %}
-                <span class="px-4 py-2 rounded bg-red-100 text-red-700 font-bold">{{ p }}</span>
+                <span class="px-4 py-2 rounded bg-red-100 text-red-700 font-bold">
+                    {{ p }}
+                </span>
             {% else %}
                 <a href="{{ url_for('home', page=p) }}"
                    class="px-4 py-2 rounded border border-gray-300 hover:bg-gray-100 transition">
