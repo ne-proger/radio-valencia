@@ -17,46 +17,49 @@
 
 {% if posts %}
 
-{# ================= PINNED ================= #}
+{# ================= HERO PINNED ================= #}
 {% set pinned = posts[0] if posts[0].is_pinned else none %}
 
 {% if pinned %}
-<a href="{{ url_for('post', post_id=pinned.id) }}" class="block mb-12 group">
-    <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+<a href="{{ url_for('post', post_id=pinned.id) }}"
+   class="block mb-12">
 
-        <div class="relative aspect-[16/9] bg-gray-100 flex items-center justify-center overflow-hidden">
-            {% if pinned.main_image_url %}
-            <img
-                src="{{ pinned.main_image_url }}"
-                alt="{{ pinned.title }}"
-                class="w-full h-full object-contain sm:object-cover transition-transform duration-500 group-hover:scale-105">
-            {% endif %}
+    <div class="relative w-full aspect-[16/9] sm:aspect-[21/9] rounded-2xl overflow-hidden shadow-lg bg-black">
 
-            <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition"></div>
-        </div>
+        {% if pinned.main_image_url %}
+        <img
+            src="{{ pinned.main_image_url }}"
+            alt="{{ pinned.title }}"
+            class="absolute inset-0 w-full h-full object-contain sm:object-cover">
+        {% endif %}
 
-        <div class="p-6 sm:p-8">
-            <span class="inline-block mb-3 text-xs font-bold uppercase text-red-600">
-                Закреплено
-            </span>
+        <!-- GRADIENT OVERLAY -->
+        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
 
-            <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight mb-4">
-                {{ pinned.title }}
-            </h1>
+        <!-- TEXT -->
+        <div class="absolute inset-0 flex items-end">
+            <div class="p-4 sm:p-8 max-w-4xl text-white">
 
-            <p class="text-gray-700 text-base sm:text-lg line-clamp-4">
-                {{ pinned.content | markdown | striptags }}
-            </p>
+                <div class="text-xs sm:text-sm opacity-80 mb-2">
+                    {{ pinned.date_posted.strftime('%d.%m.%Y %H:%M') }}
+                </div>
 
-            <div class="mt-4 text-sm text-gray-400">
-                {{ pinned.date_posted.strftime('%d.%m.%Y %H:%M') }}
+                <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight mb-3">
+                    {{ pinned.title }}
+                </h1>
+
+                <p class="hidden sm:block text-base sm:text-lg opacity-90 line-clamp-3">
+                    {{ pinned.content | markdown | striptags }}
+                </p>
+
             </div>
         </div>
+
     </div>
 </a>
 {% endif %}
 
-{# ================= GRID ================= #}
+{# ================= NEWS GRID ================= #}
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
 {% for post in posts if not post.is_pinned %}
@@ -70,8 +73,6 @@
             alt="{{ post.title }}"
             class="w-full h-full object-contain sm:object-cover transition-transform duration-500 group-hover:scale-105">
         {% endif %}
-
-        <div class="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition"></div>
     </div>
 
     <div class="p-4 space-y-2">
