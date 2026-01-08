@@ -21,7 +21,7 @@
 {% set pinned = posts[0] if posts[0].is_pinned else none %}
 
 {% if pinned %}
-<a href="{{ url_for('post', post_id=pinned.id) }}" class="block mb-12">
+<a href="{{ url_for('post', post_id=pinned.id) }}" class="block mb-10">
 
     <div class="relative w-full aspect-[16/9] sm:aspect-[21/9] rounded-2xl overflow-hidden shadow-lg bg-black">
 
@@ -37,21 +37,34 @@
 
         <!-- ТЕКСТ -->
         <div class="absolute inset-x-0 bottom-0">
-            <div class="p-4 sm:p-8 max-w-4xl text-white">
+            <div class="p-4 sm:p-8 max-w-3xl text-white">
 
-                <div class="text-xs sm:text-sm opacity-80 mb-2">
+                <div class="text-xs sm:text-sm opacity-80 mb-1 sm:mb-2">
                     {{ pinned.date_posted.strftime('%d.%m.%Y %H:%M') }}
                 </div>
 
-                <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight mb-3">
+                <!-- MOBILE-FIRST ЗАГОЛОВОК -->
+                <h1 class="
+                    text-lg
+                    sm:text-2xl
+                    lg:text-3xl
+                    font-bold
+                    leading-tight
+                    mb-2
+                ">
                     {{ pinned.title }}
                 </h1>
 
-                <!-- ОГРАНИЧЕННЫЙ ЛИД (БЕЗ line-clamp) -->
-                <div class="relative max-h-24 sm:max-h-28 overflow-hidden text-base sm:text-lg opacity-90">
+                <!-- ЛИД: ЖЁСТКО ОГРАНИЧЕН -->
+                <div class="
+                    text-sm
+                    sm:text-base
+                    opacity-90
+                    max-h-10
+                    sm:max-h-16
+                    overflow-hidden
+                ">
                     {{ pinned.content | striptags }}
-                    <!-- FADE -->
-                    <div class="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/80 to-transparent"></div>
                 </div>
 
             </div>
@@ -82,11 +95,11 @@
             {{ post.date_posted.strftime('%d.%m.%Y %H:%M') }}
         </div>
 
-        <h3 class="text-lg font-bold leading-snug">
+        <h3 class="text-base sm:text-lg font-bold leading-snug">
             {{ post.title }}
         </h3>
 
-        <p class="text-sm text-gray-600 max-h-20 overflow-hidden">
+        <p class="text-sm text-gray-600 max-h-16 overflow-hidden">
             {{ post.content | striptags }}
         </p>
     </div>
