@@ -4,78 +4,80 @@
 
 {% block content %}
 <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-lg">
-    <h1 class="text-3xl font-bold text-gray-900 mb-8">Редактировать новость</h1>
+    <h1 class="text-3xl font-bold text-gray-900 mb-8 text-center">Редактировать новость</h1>
     
     <form method="POST">
         <div class="mb-6">
             <label for="title" class="block text-lg font-medium text-gray-700 mb-2">Заголовок</label>
-            <input type="text" id="title" name="title" value="{{ post.title }}" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-4 focus:ring-red-200 focus:border-red-500 transition text-lg">
+            <input type="text" id="title" name="title" value="{{ post.title }}" required 
+                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-4 focus:ring-red-200 focus:border-red-500 transition text-lg">
         </div>
-        
+
         <div class="mb-6">
             <label for="category" class="block text-lg font-medium text-gray-700 mb-2">Категория</label>
-            <select id="category" name="category" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-4 focus:ring-red-200 focus:border-red-500 transition text-lg">
+            <select id="category" name="category" 
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-4 focus:ring-red-200 focus:border-red-500 transition text-lg">
                 <option value="news" {% if post.category == 'news' %}selected{% endif %}>Новости</option>
                 <option value="history" {% if post.category == 'history' %}selected{% endif %}>История</option>
                 <option value="finance" {% if post.category == 'finance' %}selected{% endif %}>Финансы</option>
                 <option value="sport" {% if post.category == 'sport' %}selected{% endif %}>Спорт</option>
             </select>
         </div>
-        
-        <div class="mb-6">
-            <label class="flex items-center text-lg font-medium text-gray-700 mb-2">
-                <input type="checkbox" name="is_pinned" {% if post.is_pinned %}checked{% endif %} class="mr-3 h-5 w-5 text-red-600 focus:ring-red-500 border-gray-300 rounded">
-                Закрепить новость
-            </label>
+
+        <div class="mb-6 flex items-center">
+            <input type="checkbox" id="is_pinned" name="is_pinned" {% if post.is_pinned %}checked{% endif %} 
+                   class="h-5 w-5 text-red-600 focus:ring-red-500 border-gray-300 rounded">
+            <label for="is_pinned" class="ml-3 text-lg font-medium text-gray-700">Закрепить на главной</label>
         </div>
-        
+
         <div class="mb-6">
             <label for="image_urls" class="block text-lg font-medium text-gray-700 mb-2">Ссылки на изображения (по одной на строку)</label>
-            <textarea id="image_urls" name="image_urls" rows="6" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-4 focus:ring-red-200 focus:border-red-500 transition text-lg">{{ current_urls }}</textarea>
-            <p class="text-sm text-gray-500 mt-1">Первая ссылка будет главной. Поддерживаются оптимизированные Cloudinary URL.</p>
+            <textarea id="image_urls" name="image_urls" rows="5" 
+                      class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-4 focus:ring-red-200 focus:border-red-500 transition text-lg font-mono">{{ current_urls }}</textarea>
+            <p class="text-sm text-gray-500 mt-2">Первая ссылка — главная. Поддерживаются любые прямые URL.</p>
         </div>
-        
+
         <div class="mb-8">
-            <label for="content" class="block text-lg font-medium text-gray-700 mb-2">Содержание (Markdown)</label>
-            <textarea id="content" name="content" required class="w-full min-h-[500px] border border-gray-300 rounded-lg focus:ring-4 focus:ring-red-200 focus:border-red-500 transition text-lg">{{ post.content }}</textarea>
+            <label for="content" class="block text-lg font-medium text-gray-700 mb-2">Текст новости (Markdown)</label>
+            <textarea id="content" name="content" required rows="20" 
+                      class="w-full border border-gray-300 rounded-xl focus:ring-4 focus:ring-red-200 focus:border-red-500 transition text-lg">{{ post.content }}</textarea>
         </div>
-        
-        <div class="text-center">
-            <button type="submit" class="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-bold py-4 px-12 rounded-full text-xl shadow-2xl transition transform hover:scale-105">
+
+        <div class="text-center pt-6">
+            <button type="submit" 
+                    class="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-bold py-4 px-16 rounded-full text-xl shadow-xl transition transform hover:scale-105">
                 Сохранить изменения
             </button>
         </div>
     </form>
 </div>
 
-<!-- EasyMDE CDN -->
+<!-- EasyMDE -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.css">
 <script src="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.js"></script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const textarea = document.getElementById('content');
-        if (textarea) {
-            new EasyMDE({
-                element: textarea,
-                spellChecker: false,
-                autosave: {
-                    enabled: true,
-                    uniqueId: "edit-post-" + {{ post.id }},  // уникальный ID для каждой новости
-                    delay: 1000,
-                },
-                forceSync: true,
-                placeholder: "Редактируйте текст здесь...",
-                toolbarTips: true,
-                status: true,
-                minHeight: "500px",
-                previewStyle: "side-by-side",
-                renderingConfig: {
-                    codeSyntaxHighlighting: true
-                },
-                initialValue: textarea.value
-            });
-        }
-    });
+document.addEventListener('DOMContentLoaded', () => {
+    const textarea = document.getElementById('content');
+    if (textarea) {
+        new EasyMDE({
+            element: textarea,
+            spellChecker: false,
+            autosave: {
+                enabled: true,
+                uniqueId: "edit-post-{{ post.id }}",  // уникально для каждой новости
+                delay: 1000,
+            },
+            forceSync: true,
+            placeholder: "Редактируйте текст здесь...",
+            toolbarTips: true,
+            status: ["lines", "words", "cursor"],
+            minHeight: "500px",
+            previewStyle: "side-by-side",
+            renderingConfig: { codeSyntaxHighlighting: true },
+            initialValue: textarea.value
+        });
+    }
+});
 </script>
 {% endblock %}
