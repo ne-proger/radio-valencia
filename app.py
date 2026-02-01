@@ -60,6 +60,19 @@ def get_weather_data():
         return None
 
 # --- Вспомогательные ---
+
+# --- Вспомогательные ---
+@app.template_filter('markdown')
+def convert_markdown(text):
+    extensions = [
+        'markdown.extensions.extra',           # таблицы, списки задач, атрибуты
+        'markdown.extensions.codehilite',      # подсветка кода
+        'markdown.extensions.fenced_code',     # ``` блоки
+        'markdown.extensions.toc',             # оглавление (опционально)
+        'markdown.extensions.sane_lists',      # более разумные списки
+    ]
+    return markdown.markdown(text, extensions=extensions, output_format='html5')
+
 @app.context_processor
 def inject_datetime():
     return {'datetime': datetime}
