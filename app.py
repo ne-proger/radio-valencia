@@ -61,17 +61,33 @@ def get_weather_data():
 
 # --- Вспомогательные ---
 
-# --- Вспомогательные ---
+import markdown
+
 @app.template_filter('markdown')
 def convert_markdown(text):
     extensions = [
-        'markdown.extensions.extra',           # таблицы, списки задач, атрибуты
-        'markdown.extensions.codehilite',      # подсветка кода
-        'markdown.extensions.fenced_code',     # ``` блоки
-        'markdown.extensions.toc',             # оглавление (опционально)
-        'markdown.extensions.sane_lists',      # более разумные списки
+        'markdown.extensions.extra',              # таблицы, footnotes, definition lists и т.д.
+        'markdown.extensions.codehilite',         # подсветка кода в ``` блоках
+        'markdown.extensions.fenced_code',        # fenced code blocks (```python)
+        'markdown.extensions.sane_lists',         # разумные списки без лишних переносов
+        'markdown.extensions.toc',                # оглавление (опционально, можно убрать)
+        'markdown.extensions.nl2br',              # переносы строк → <br>
+        'markdown.extensions.attr_list',          # атрибуты { .class #id }
+        'markdown.extensions.admonition',         # !!! note "Заголовок" → красивые блоки
+        'pymdownx.tasklist',                      # task lists - [x] и - [ ]
+        'pymdownx.strikethrough',                 # ~~зачёркивание~~
+        'pymdownx.superfences',                   # улучшенные fenced blocks
+        'pymdownx.highlight',                     # ещё лучшая подсветка кода
     ]
-    return markdown.markdown(text, extensions=extensions, output_format='html5')
+    return markdown.markdown(
+        text,
+        extensions=extensions,
+        extension_configs={
+            'pymdownx.highlight': {'use_pygments': True},
+            'markdown.extensions.codehilite': {'css_class': 'highlight'},
+        },
+        output_format='html5'
+    )
 
 @app.context_processor
 def inject_datetime():
